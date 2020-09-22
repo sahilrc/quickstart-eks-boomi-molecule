@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: molecule-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/target-type: instance
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:085956352118:certificate/23b1c122-5647-459b-8e73-52b1f8ead14c
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http2.enabled=true
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: molecule-service
+              servicePort: 443

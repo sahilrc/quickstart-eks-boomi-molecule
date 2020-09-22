@@ -1,3 +1,20 @@
-[submodule "docs/boilerplate"]
-	path = docs/boilerplate
-	url = https://github.com/aws-quickstart/quickstart-documentation-base-common.git
+[submodule "submodules/quickstart-aws-vpc"]
+	path = submodules/quickstart-aws-vpc
+	url = git@github.com:aws-quickstart/quickstart-aws-vpc.git
+	branch = master
+[submodule "submodules/quickstart-linux-bastion"]
+	path = submodules/quickstart-linux-bastion
+	url = git@github.com:aws-quickstart/quickstart-linux-bastion.git
+	branch = master
+[submodule "functions/source/EksClusterResource"]
+	path = functions/source/EksClusterResource
+	url = git@github.com:aws-quickstart/quickstart-amazon-eks-cluster-resource-provider.git
+[submodule "functions/source/HelmReleaseResource"]
+	path = functions/source/HelmReleaseResource
+	url = git@github.com:aws-quickstart/quickstart-helm-resource-provider.git
+[submodule "submodules/quickstart-eks-snyk"]
+	path = submodules/quickstart-eks-snyk
+	url = git@github.com:aws-quickstart/quickstart-eks-snyk.git
+[submodule "submodules/quickstart-eks-newrelic-infrastructure"]
+	path = submodules/quickstart-eks-newrelic-infrastructure
+	url = git@github.com:aws-quickstart/quickstart-eks-newrelic-infrastructure.git

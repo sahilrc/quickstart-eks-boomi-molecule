@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "deploy an example workload into an existing kubernetes cluster"
+Parameters:
+  ClusterName:
+    Type: String
+    Description: Name of the EKS cluster to join
+  BoomiUsername:
+    Description: The email account associated with the Boomi account.
+    Type: String
+    NoEcho: true
+  BoomiPassword:
+    Description: The password associated with the Boomi account.
+    Type: String
+    NoEcho: true
+  BoomiAccountID:
+    Description: The Boomi account ID that you want to associate with the new Molecule cluster.
+    Type: String
+    NoEcho: true
+  CertificateArn:
+    Description: The SSL Certificate ID used with the load balancer.
+    Type: String
+    Default: ''
+  LoadBalancerType:
+    Type: String
+    Default: ALB
+    AllowedValues: 
+      - ALB
+      - NLB
+    Description: EKS Service Load Balancer Type.
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: quickstart-boomi-eks-molecule/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. When using your own bucket, you must specify this value.
+    Type: String
+Conditions:
+  NetworkLoadBalancer: !Equals [ !Ref LoadBalancerType, NLB]
+  ApplicationLoadBalancer: !Equals [ !Ref LoadBalancerType, ALB]
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+Resources:
+  KubeManifestSecret:
+    Type: "Custom::KubeManifest"
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest
+      Manifest:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: "boomi-secret"
+        type: Opaque
+        stringData:
+          username: !Ref BoomiUsername
+          password: !Ref BoomiPassword
+          account: !Ref BoomiAccountID
+  EKSMetricsServer:
+    Type: 'AWSQS::Kubernetes::Helm'
+    Properties:
+      ClusterID: !Ref ClusterName
+      Namespace: kube-system
+      Chart: stable/metrics-server
+      Values:
+        image.repository: k8s.gcr.io/metrics-server/metrics-server
+        image.tag: v0.3.7
+        serviceAccount.name: metrics-server
+        serviceAccount.create: true
+  KubeManifestMoleculeNLBSerivice:
+    Condition: NetworkLoadBalancer
+    Type: "Custom::KubeManifest"
+    Metadata:
+      DependsOn:
+       - !Ref EKSMetricsServer
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Manifest:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: molecule-service
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-type: nlb
+            service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+            service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+            service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+            service.beta.kubernetes.io/aws-load-balancer-ssl-cert: !Ref CertificateArn
+          labels:
+            app: molecule
+        spec:
+          selector:
+            app: molecule
+          type: LoadBalancer
+          ports:
+          - name: https
+            protocol: TCP
+            port: 443
+            targetPort: 9093
+          - name: http
+            protocol: TCP
+            port: 80
+            targetPort: 9090
+  KubeManifestMoleculeALBSerivice:
+    Condition: ApplicationLoadBalancer
+    Type: "Custom::KubeManifest"
+    Metadata:
+      DependsOn:
+       - !Ref EKSMetricsServer
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Url: !Sub
+        - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/boomi_molecule_eks_service-alb.yaml
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+  KubeManifestMoleculeIngress:
+    Condition: ApplicationLoadBalancer
+    Type: "Custom::KubeManifest"
+    Metadata:
+      DependsOn:
+       - !Ref KubeManifestMoleculeALBSerivice
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Manifest:
+        apiVersion: extensions/v1beta1
+        kind: Ingress
+        metadata:
+          name: molecule-ingress
+          annotations:
+            # trigger the alb-ingress-controller
+            kubernetes.io/ingress.class: alb
+            # set ALB parameters
+            alb.ingress.kubernetes.io/target-type: instance
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/certificate-arn: !Ref CertificateArn
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+            alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+            alb.ingress.kubernetes.io/load-balancer-attributes: routing.http2.enabled=true
+            # allow 404s on the health check
+            alb.ingress.kubernetes.io/healthcheck-path: "/"
+            alb.ingress.kubernetes.io/success-codes: "200,404"
+        spec:
+          # forward all requests to nginx-ingress-controller
+          rules:
+            - http:
+                paths:
+                  - path: /*
+                    backend:
+                      serviceName: molecule-service
+                      servicePort: 443
+  KubeManifestMoleculeStatefulSet:
+    Type: "Custom::KubeManifest"
+    Metadata:
+      DependsOn:
+       - !Ref EKSMetricsServer
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Url: !Sub
+        - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/boomi_molecule_eks_statefulset.yaml
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+  KubeManifestHPA:
+    Type: "Custom::KubeManifest"
+    Metadata:
+      DependsOn:
+       - !Ref KubeManifestMoleculeStatefulSet
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-CustomKubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Url: !Sub
+        - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/boomi_molecule_eks_hpa.yaml
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]

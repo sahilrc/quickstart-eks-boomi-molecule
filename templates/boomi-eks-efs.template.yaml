@@ -1,0 +1,182 @@
+# Credit to [David Schott](https://github.com/schottsfired) from CloudBees for creating the original version of this
+# template https://github.com/aws-quickstart/quickstart-cloudbees-core/blob/master/templates/cloudbees-core-efs.template.yaml
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploys an EFS file system and efs-provisioner (qs-1pipqrqhi)
+Metadata:
+  QSLint:
+    Exclusions: [W9002, W9003, W9004, W9006]
+Parameters:
+  VPCID:
+    Description: ID of your existing VPC for deployment
+    Type: AWS::EC2::VPC::Id
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: The CIDR IP range that is permitted to access the instances. We recommend
+      that you set this value to a trusted IP range.
+    Type: String
+  PrivateSubnet1ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2ID:
+    Type: String
+    Default: ""
+  PrivateSubnet3ID:
+    Type: String
+    Default: ""
+  PerformanceMode:
+    Type: String
+    AllowedValues: [ generalPurpose, maxIO ]
+    Default: generalPurpose
+  EfsProvisionedThroughputInMibps:
+    Type: Number
+    MinValue: 0
+    MaxValue: 1024
+    Default: 0
+  ThroughputMode:
+    Type: String
+    AllowedValues: [ bursting, provisioned ]
+    Default: bursting
+  ClusterName:
+    Type: String
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: quickstart-boomi-eks-molecule/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. When using your own bucket, you must specify this value.
+    Type: String
+Rules:
+  ProvisionedThroughput:
+    RuleCondition: !Equals [ !Ref ThroughputMode, provisioned ]
+    Assertions:
+      - Assert: !Not [ !Equals [ '0', !Ref EfsProvisionedThroughputInMibps ] ]
+        AssertDescription: "EfsProvisionedThroughputInMibps must be greater than 0 when ThroughputMode is provisioned"
+  BurstingThroughput:
+    RuleCondition: !Equals [ !Ref ThroughputMode, bursting ]
+    Assertions:
+      - Assert:  !Equals [ '0', !Ref EfsProvisionedThroughputInMibps ]
+        AssertDescription: "EfsProvisionedThroughputInMibps must be 0 when ThroughputMode is bursting"
+Conditions:
+  IsProvisioned:
+    !Equals [ !Ref ThroughputMode, provisioned ]
+  3AZDeployment: !Not [!Equals [!Ref PrivateSubnet3ID, ""]]
+  2AZDeployment: !Or
+    - !Not [!Equals [!Ref PrivateSubnet2ID, ""]]
+    - !Not [!Equals [!Ref PrivateSubnet3ID, ""]]
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+Resources:
+  EFSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for all nodes in the node group
+      VpcId: !Ref VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-efs-sg"
+  EFSSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow nodes to communicate with EFS
+      GroupId: !Ref EFSSecurityGroup
+      CidrIp: !Ref VPCCIDR
+      IpProtocol: '-1'
+      FromPort: 0
+      ToPort: 65535
+  EFSFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+      PerformanceMode: !Ref PerformanceMode
+      ProvisionedThroughputInMibps: !If [ IsProvisioned, !Ref EfsProvisionedThroughputInMibps, !Ref 'AWS::NoValue' ]
+      ThroughputMode: !Ref ThroughputMode
+  MountTargetPrivateSubnet1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups: [ !Ref EFSSecurityGroup ]
+      SubnetId: !Ref PrivateSubnet1ID
+  MountTargetPrivateSubnet2:
+    Condition: 2AZDeployment
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups: [ !Ref EFSSecurityGroup ]
+      SubnetId: !Ref PrivateSubnet2ID
+  MountTargetPrivateSubnet3:
+    Condition: 3AZDeployment
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups: [ !Ref EFSSecurityGroup ]
+      SubnetId: !Ref PrivateSubnet3ID
+  EFSCSIDriver:
+    Type: "AWSQS::Kubernetes::Helm"
+    Metadata:
+      DependsOn:
+        - !Ref MountTargetPrivateSubnet1
+        - !Ref MountTargetPrivateSubnet2
+        - !Ref MountTargetPrivateSubnet3
+    Properties:
+      ClusterID: !Ref ClusterName
+      Repository: https://kubernetes-sigs.github.io/aws-efs-csi-driver/
+      Chart: aws-efs-csi-driver/aws-efs-csi-driver
+      Name: aws-efs-csi-driver
+  KubeManifestPersistentVolumes:
+    Type: "Custom::KubeManifest"
+    Metadata:
+      DependsOn:
+        - !Ref EFSCSIDriver
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest
+      Manifest:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          name: "efs-pv"
+        spec:
+          capacity:
+            storage: 5Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteMany
+          persistentVolumeReclaimPolicy: Retain
+          storageClassName: "efs-sc"
+          csi:
+            driver: efs.csi.aws.com
+            volumeHandle: !Ref EFSFileSystem
+  KubeManifestPersistentVolumesClaim:
+    Type: "Custom::KubeManifest"
+    Metadata:
+      DependsOn:
+        - !Ref KubeManifestPersistentVolumes
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Url: !Sub
+        - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/boomi_molecule_eks_pvclaim.yaml
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
