@@ -1,11 +1,3 @@
-[submodule "submodule/quickstart-aws-vpc"]
-	path = submodule/quickstart-aws-vpc
-	url = git@github.com:aws-quickstart/quickstart-aws-vpc.git
-	branch = main
-[submodule "submodule/quickstart-aws-acm-certificate"]
-	path = submodule/quickstart-aws-acm-certificate
-	url = git@github.com:aws-quickstart/quickstart-aws-acm-certificate.git
-	branch = main
 [submodule "functions/source/EksClusterResource"]
 	path = functions/source/EksClusterResource
 	url = git@github.com:aws-quickstart/quickstart-amazon-eks-cluster-resource-provider.git
