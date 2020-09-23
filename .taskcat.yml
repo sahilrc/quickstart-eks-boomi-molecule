@@ -1,5 +1,5 @@
 project:
-  name: quickstart-amazon-eks
+  name: quickstart-boomi-eks-molecule
   owner: quickstart-eng@amazon.com
   regions:
   - eu-north-1
@@ -7,7 +7,7 @@ project:
   - us-east-1
   - us-east-2
   - us-west-2
-  template: templates/amazon-eks-master.template.yaml
+  template: templates/boomi-eks-master.template.yaml
   parameters:
     RemoteAccessCIDR: 10.0.0.0/16
     QSS3BucketName: $[taskcat_autobucket]
@@ -114,16 +114,7 @@ tests:
       ProvisionBastionHost: Enabled
     regions:
     - us-east-2
-  fargate:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ClusterAutoScaler: Enabled
-      FargateNamespaces: kube-system
-      FargateLabels: 'app.kubernetes.io/name=aws-cluster-autoscaler'
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-    regions:
-    - us-east-1
+
   enable-oidc:
     regions:
       - eu-west-2
@@ -132,24 +123,7 @@ tests:
       IamOidcProvider: Enabled
       EKSPublicAccessEndpoint: Enabled
       ProvisionBastionHost: Disabled
-  snyk:
-    regions:
-      - eu-west-3
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ProvisionBastionHost: Disabled
-      EKSPublicAccessEndpoint: Enabled
-      SnykIntegration: Enabled
-      SnykIntegrationId: ---overridden---
-  new-relic:
-    regions:
-      - sa-east-1
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ProvisionBastionHost: Disabled
-      EKSPublicAccessEndpoint: Enabled
-      NewRelicIntegration: Enabled
-      NewRelicLicenseKey: ---overridden---
+
   managed-node-group-ASC:
     parameters:
       AvailabilityZones: $[taskcat_genaz_3]
