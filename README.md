@@ -1,16 +1,20 @@
 # quickstart-boomi-eks-molecule
-## Modular and Scalable Boomi EKS Architecture
+## Boomi Molecule on the AWS Cloud
 
-This Quick Start helps you to deploy a Kubernetes cluster that uses Amazon Elastic Kubernetes Service (Amazon EKS), enabling you to deploy, manage, and scale containerized applications running on Kubernetes on the Amazon Web Services (AWS) Cloud.
+This Quick Start automatically deploys a Boomi Molecule EKS Cluster in the Amazon Web Services (AWS) Cloud. The deployment takes about 60 minutes.
 
-Amazon EKS runs the Kubernetes management infrastructure for you across multiple AWS Availability Zones to eliminate a single point of failure. Amazon EKS is also certified Kubernetes conformant, and this reference deployment provides custom resources that enable you to deploy and manage your Kubernetes applications using AWS CloudFormation by declaring Kubernetes manifests or Helm charts directly in AWS CloudFormation templates.
+This Quick Start is for users who are looking for an integration platform as a service (iPaaS) that can be hosted on AWS.
 
-You can use the AWS CloudFormation templates included with the Quick Start to deploy an Amazon EKS cluster in your AWS account in about 60 minutes. The Quick Start automates the following:
+This Quick Start deployment includes Amazon Elastic File Service (Amazon EFS), which is not available in all AWS Regions. For a current list of supported Regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticfilesystem-region).
 
-- Deploying Amazon EKS into a new VPC
-- Deploying Amazon EKS into an existing VPC
+You can use the AWS CloudFormation templates included with the Quick Start to deploy Boomi Molecule into a new or existing virtual private cloud (VPC) in your AWS account. The Quick Starts automates the following:
 
-You can also use the AWS CloudFormation templates as a starting point for your own implementation.
+- Deploying Boomi Molecule into a new VPC
+- Deploying Boomi Molecule into an existing VPC
 
+![Quick Start architecture for Boomi Molecule on the AWS Cloud](https://d0.awsstatic.com/partner-network/QuickStart/datasheets/boomi-molecule-on-aws-architecture-diagram.png)
 
-To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo. If you'd like to submit code for this Quick Start, please review the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).
+For architectural details, best practices, and step-by-step instructions, see the deployment guide for [Boomi Molecule](https://fwd.aws/4M4Px).
+
+To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
+If you'd like to submit code for this Quick Start, please review the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).
