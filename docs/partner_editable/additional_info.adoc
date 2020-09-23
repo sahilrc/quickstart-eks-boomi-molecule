@@ -2,22 +2,76 @@
 //Should any sections not be applicable, remove them
 
 == Test the deployment
-// If steps are required to test the deployment, add them here. If not, remove the heading
+To view the Molecule in the Dell Boomi AtomSphere platform, log in to your https://platform.boomi.com/[Dell Boomi account^], navigate to the *Manage* drop-down menu, and choose *Atom Management*. The newly created Amazon Molecule EKS Cluster will be displayed.
 
-== Post deployment steps
-// If Post-deployment steps are required, add them here. If not, remove the heading
+[#AddInfo1]
+.Dell Boomi Dashboard with an unattached AWS-managed Molecule Cluster
+[link=images/image3.png]
+image::../images/image3.png[image,width=648,height=293]
 
-== Best practices for using {partner-product-short-name} on AWS
+You can then attach the Molecules to any environment you have staged and deploy workloads to that Molecule cluster. By Default the molecule you deployed will be under ‘Unattached Atoms’. When you click on ‘Atom Information’ you will see an option to attach it to an environment.
+
+//== Best practices for using {partner-product-name} on AWS
 // Provide post-deployment best practices for using the technology on AWS, including considerations such as migrating data, backups, ensuring high performance, high availability, etc. Link to software documentation for detailed information.
 
-_Add any best practices for using the software._
+//_Add any best practices for using the software._
 
 == Security
-// Provide post-deployment best practices for using the technology on AWS, including considerations such as migrating data, backups, ensuring high performance, high availability, etc. Link to software documentation for detailed information.
-
-_Add any security-related information._
+This Quick Start deploys a bastion host and a Dell Boomi Molecule EKS Cluster into an AWS VPC. The bastion host is the only means of accessing the Dell Boomi Molecule EKS Cluster at a command-line level. The Dell Boomi Molecule EKS Cluster is deployed into private subnets and cannot be reached through the internet. The Boomi Molecule EKS Cluster communicates through a NAT Gateway for updates and patches, and it communicates through the public-facing Application Load Balancer or Network Load Balancer to communicate with the Dell Boomi AtomSphere platform.
 
 == Other useful information
 //Provide any other information of interest to users, especially focusing on areas where AWS or cloud usage differs from on-premises usage.
 
-_Add any other details that will help the customer use the software on AWS._
+=== Performance monitoring
+
+Monitoring the CPU, network, and Amazon Elastic Block Store (Amazon EBS) performance of your AWS Dell Boomi Molecule EKS Cluster is done through CloudWatch metrics.
+
+CPU and network performance are measured in utilization, network in and out, network packets in and out, and system status checks.
+
+Amazon EBS volume performance is measured in read and write throughput, average read and write size, read and write bandwidth, read and write latency, and volume idle time.
+
+Amazon EFS reports metrics to CloudWatch and can be monitored there. Metrics include client connections, data read and data write bytes, and IO percent limits.
+
+=== Creating an installation token
+
+Administrators can create an installation token without having to share login credentials for an Atom/Molecule installation. To create an installation token, do the following:
+
+. Go to *Manage > Atom Management*.
+. Choose *+New > Molecule*.
+. On the *Build* page, choose the *Welcome* tab.
+. Under the *Create* heading, choose *Molecule*.
+. Choose *Security Options*.
+. In the *Token Valid for* field, select the length of time the token is valid (30 minutes to 24 hours).
+. Click *Generate Token*.
+
+[#AddInfo2]
+.Molecule Setup
+[link=images/image6.png]
+image::../images/image6.png[image,width=402,height=319]
+
+=== Creating an API token
+
+Administrators can create a long-lived API token without having to share login credentials for an Atom/Molecule installation. To create an user API token, do the following:
+
+. Choose *Settings > Account Information and Setup*.
+. Choose the *AtomSphere API Tokens* tab.
+. Choose *Add New Token*.
+
+[start=3]
+. Enter a unique name for the token.
+
+[#AddInfo3]
+.New AtomSphere API Token
+[link=images/image9.png]
+image::../images/image9.png[image,width=370,height=219]
+
+[start=4]
+. Click *Generate Token*.
+. Choose *Copy* to copy the token string to the clipboard without exiting. When you are ready to exit, click *Copy to Clipboard & Close* to copy the token string and exit the dialog. 
+
+[#AddInfo4]
+.Copying the token string
+[link=images/image10.png]
+image::../images/image10.png[image,width=370,height=219]
+
+Copy the token key value to a secure location. It is recommended that you treat tokens with the same level of security as you would a password. If you lose it, you will have to generate a new token and revoke the old one.
