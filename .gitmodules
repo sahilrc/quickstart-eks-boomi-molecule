@@ -1,9 +1,9 @@
-[submodule "submodules/quickstart-aws-vpc"]
-	path = submodules/quickstart-aws-vpc
+[submodule "submodule/quickstart-aws-vpc"]
+	path = submodule/quickstart-aws-vpc
 	url = git@github.com:aws-quickstart/quickstart-aws-vpc.git
 	branch = main
-[submodule "submodules/quickstart-aws-acm-certificate"]
-	path = submodules/quickstart-aws-acm-certificate
+[submodule "submodule/quickstart-aws-acm-certificate"]
+	path = submodule/quickstart-aws-acm-certificate
 	url = git@github.com:aws-quickstart/quickstart-aws-acm-certificate.git
 	branch = main
 [submodule "functions/source/EksClusterResource"]
@@ -12,6 +12,3 @@
 [submodule "functions/source/HelmReleaseResource"]
 	path = functions/source/HelmReleaseResource
 	url = git@github.com:aws-quickstart/quickstart-helm-resource-provider.git
-[submodule "docs/boilerplate"]
-	path = docs/boilerplate
-	url = https://github.com/aws-quickstart/quickstart-documentation-base-common.git
