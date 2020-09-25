@@ -167,7 +167,7 @@ Resources:
             alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
             alb.ingress.kubernetes.io/load-balancer-attributes: routing.http2.enabled=true
             # allow 404s on the health check
-            alb.ingress.kubernetes.io/healthcheck-path: "/"
+            alb.ingress.kubernetes.io/healthcheck-path: "/_admin/status"
             alb.ingress.kubernetes.io/success-codes: "200,404"
         spec:
           # forward all requests to nginx-ingress-controller
