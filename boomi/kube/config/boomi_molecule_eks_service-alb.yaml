@@ -12,7 +12,7 @@ spec:
   - name: https
     protocol: TCP
     port: 443
-    targetPort: 9093
+    targetPort: 9090
   - name: http
     protocol: TCP
     port: 80
