@@ -196,7 +196,7 @@ Resources:
     Version: '1.0'
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
-      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-CustomKubeManifest-${ClusterName}"
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
       ClusterName: !Ref ClusterName
       # Kubernetes manifest URL
       Url: !Sub
