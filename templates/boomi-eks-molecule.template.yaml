@@ -133,9 +133,8 @@ Resources:
       ClusterName: !Ref ClusterName
       # Kubernetes manifest URL
       Url: !Sub
-        - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/boomi_molecule_eks_service-alb.yaml
-        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        - s3://${S3Bucket}/${QSS3KeyPrefix}boomi/kube/config/boomi_molecule_eks_service-alb.yaml
+        - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
   KubeManifestMoleculeIngress:
     Condition: ApplicationLoadBalancer
     Type: "Custom::KubeManifest"
@@ -187,9 +186,8 @@ Resources:
       ClusterName: !Ref ClusterName
       # Kubernetes manifest URL
       Url: !Sub
-        - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/boomi_molecule_eks_statefulset.yaml
-        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        - s3://${S3Bucket}/${QSS3KeyPrefix}boomi/kube/config/boomi_molecule_eks_statefulset.yaml
+        - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
   KubeManifestHPA:
     Type: "Custom::KubeManifest"
     Metadata:
@@ -202,6 +200,5 @@ Resources:
       ClusterName: !Ref ClusterName
       # Kubernetes manifest URL
       Url: !Sub
-        - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/boomi_molecule_eks_hpa.yaml
-        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        - s3://${S3Bucket}/${QSS3KeyPrefix}boomi/kube/config/boomi_molecule_eks_hpa.yaml
+        - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
