@@ -15,122 +15,34 @@ project:
   lambda_source_path: functions/source
   lambda_zip_path: functions/packages
 tests:
-  defaults:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ProvisionBastionHost: Disabled
-      EKSPublicAccessEndpoint: Enabled
-  public-endpoint:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      EKSPublicAccessEndpoint: Disabled
-      ProvisionBastionHost: Enabled
+  existing-vpc:
     regions:
-      - ap-northeast-2
-  cluster-autoscaler:
+      - us-east-2
     parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ClusterAutoScaler: Enabled
-      ProvisionBastionHost: Enabled
-      EKSPublicAccessEndpoint: Disabled
-    regions:
-    - eu-central-1
-  efs:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      EfsStorageClass: Enabled
-      ClusterAutoScaler: Disabled
-      ManagedNodeGroup: 'yes'
-      ManagedNodeGroupAMIType: AL2_x86_64
-      EKSPublicAccessEndpoint: Disabled
-      ProvisionBastionHost: Enabled
-    regions:
-    - us-west-2
-  efs-prov:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      EfsStorageClass: Enabled
-      ClusterAutoScaler: Disabled
-      EfsThroughputMode: provisioned
-      EfsProvisionedThroughputInMibps: 100
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-    regions:
-    - ap-east-1
-  managed-node-group:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ClusterAutoScaler: Disabled
-      ManagedNodeGroup: 'yes'
-      ManagedNodeGroupAMIType: AL2_x86_64
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-    regions:
-    - ap-south-1
-  monitoring-prom-graf:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      MonitoringStack: Prometheus + Grafana
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-    regions:
-    - ap-southeast-2
-    - us-west-2
-  2az:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_2]
-      NumberOfAZs: "2"
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-    regions:
-    - ca-central-1
-    - cn-north-1
-    - cn-northwest-1
-  no-logging:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_2]
-      NumberOfAZs: "2"
-      EKSClusterLoggingTypes: ""
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-    regions:
-    - eu-west-1
-  with-hybrid:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ClusterAutoScaler: Disabled
-      ManagedNodeGroup: 'yes'
-      ManagedNodeGroupAMIType: AL2_x86_64
-      MangedNodeGroupLabel: TestMNG
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-    regions:
-    - us-west-2
-  alb-ingress:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ALBIngressController: Enabled
-      EKSPublicAccessEndpoint: Disabled
-      ProvisionBastionHost: Enabled
-    regions:
-    - us-east-2
-
-  enable-oidc:
-    regions:
-      - eu-west-2
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      IamOidcProvider: Enabled
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Disabled
-
-  managed-node-group-ASC:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      ClusterAutoScaler: Enabled
-      ManagedNodeGroup: 'yes'
-      ManagedNodeGroupAMIType: AL2_x86_64
-      EKSPublicAccessEndpoint: Enabled
-      ProvisionBastionHost: Enabled
-    regions:
-    - ap-south-1
+      VPCID: $[taskcat_ssm_/taskcat/params/vpc/id]
+      PrivateSubnet1ID: $[taskcat_ssm_/taskcat/params/vpc/private_subnet/1a/id]
+      PrivateSubnet2ID: $[taskcat_ssm_/taskcat/params/vpc/private_subnet/2a/id]
+      PrivateSubnet3ID: $[taskcat_ssm_/taskcat/params/vpc/private_subnet/3a/id]
+      PublicSubnet1ID: $[taskcat_ssm_/taskcat/params/vpc/public_subnet/1/id]
+      PublicSubnet2ID: $[taskcat_ssm_/taskcat/params/vpc/public_subnet/2/id]
+      PublicSubnet3ID: $[taskcat_ssm_/taskcat/params/vpc/public_subnet/3/id]
+      BoomiAccountID: override
+      BoomiPassword: override
+      BoomiUsername: override
+      MoleculeFQDN: override
+      HostedZoneID: override
+      QSS3BucketName: $[taskcat_autobucket]
+      QSS3BucketRegion: $[taskcat_current_region]
+    template: templates/existing.template.yaml
+  # helm-charts:
+  #   regions:
+  #     - us-east-2
+  #   parameters:
+  #     BoomiAccountID: override
+  #     BoomiPassword: override
+  #     BoomiUsername: override
+  #     QSS3BucketName: $[taskcat_autobucket]
+  #     QSS3BucketRegion: $[taskcat_current_region]
+  #     ClusterName: $[taskcat_ssm_/taskcat/params/eks/cluster_name]
+  #     LoadBalancerType: $[taskcat_ssm_/taskcat/params/boomi-eks-molecule/lb-type]
+  #   template: templates/boomi-eks-molecule.template.yaml
