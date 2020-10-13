@@ -181,7 +181,7 @@ Resources:
                       serviceName: molecule-service
                       servicePort: 443
   KubeManifestMoleculeStatefulSet:
-    Type: AWSQS::Kubernetes::Resorce
+    Type: AWSQS::Kubernetes::Resource
     Metadata:
       DependsOn:
        - !Ref EKSMetricsServer

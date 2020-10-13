@@ -38,16 +38,16 @@ Metadata:
       Parameters:
       - NodeInstanceType
       - NumberOfNodes
-      - NodeGroupName
-      - NodeVolumeSize
-      - KubernetesVersion
+      # - NodeGroupName
+      # - NodeVolumeSize
+      # - KubernetesVersion
     - Label:
         default: AWS Quick Start configuration
       Parameters:
       - QSS3BucketName
       - QSS3KeyPrefix
       - QSS3BucketRegion
-      - LambdaZipsBucketName
+      # - LambdaZipsBucketName
     ParameterLabels:
       QSS3BucketName:
         default: Quick Start S3 bucket name
@@ -61,12 +61,12 @@ Metadata:
         default: Nodes instance type
       NumberOfNodes:
         default: Number of nodes
-      NodeGroupName:
-        default: Node group name
-      NodeVolumeSize:
-        default: Node volume size
-      LambdaZipsBucketName:
-        default: Lambda zips bucket name
+      # NodeGroupName:
+      #   default: Node group name
+      # NodeVolumeSize:
+      #   default: Node volume size
+      # LambdaZipsBucketName:
+      #   default: Lambda zips bucket name
       PublicSubnet1ID:
         default: Public subnet 1 ID
       PublicSubnet2ID:
@@ -81,8 +81,8 @@ Metadata:
         default: Private subnet 3 ID
       VPCID:
         default: VPC ID
-      KubernetesVersion:
-        default: Kubernetes version
+      # KubernetesVersion:
+      #   default: Kubernetes version
 Parameters:
   PublicSubnet1ID:
     Type: "AWS::EC2::Subnet::Id"
@@ -196,23 +196,23 @@ Parameters:
     Default: 1
     Description: The number of Amazon EKS node instances. The default is one for each of the three Availability Zones.
     Type: Number
-  NodeGroupName:
-    Default: Default
-    Description: The name for Amazon EKS node group.
-    Type: String
-  NodeVolumeSize:
-    Default: 100
-    Description: The size for the node's root EBS volume.
-    Type: String
-  LambdaZipsBucketName:
-    Description: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
-    Type: String
-    Default: ''
-  KubernetesVersion:
-    Type: String
-    AllowedValues: [ "1.16", "1.15" ]
-    Default: "1.16"
-    Description: The Kubernetes control plane version.
+  # NodeGroupName:
+  #   Default: Default
+  #   Description: The name for Amazon EKS node group.
+  #   Type: String
+  # NodeVolumeSize:
+  #   Default: 100
+  #   Description: The size for the node's root EBS volume.
+  #   Type: String
+  # LambdaZipsBucketName:
+  #   Description: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
+  #   Type: String
+  #   Default: ''
+  # KubernetesVersion:
+  #   Type: String
+  #   AllowedValues: [ "1.16", "1.15" ]
+  #   Default: "1.16"
+  #   Description: The Kubernetes control plane version.
   BoomiUsername:
     Description: The email account associated with the Boomi account.
     Type: String
@@ -245,26 +245,26 @@ Parameters:
     Description: The fully qualified domain name for the Boomi Molecule cluster. Use with 'HostedZoneID' if you are not using SSL..
     Type: String
     Default: ''
-  EFSPerformanceMode:
-    Description: The performance mode for the EFS volume.
-    Type: String
-    Default: generalPurpose
-    AllowedValues:
-      - generalPurpose
-      - maxIO
-  EFSProvisionedThroughputInMibps:
-    Description: The provisioned throughput value for the EFS volume.
-    Type: Number
-    Default: 10
-    MaxValue: 1024
-    ConstraintDescription: "Value must be between 1-1024"
-  EFSThroughputMode:
-    Description: The throughput mode for the EFS volume.
-    Type: String
-    Default: bursting
-    AllowedValues:
-      - provisioned
-      - bursting
+  # EFSPerformanceMode:
+  #   Description: The performance mode for the EFS volume.
+  #   Type: String
+  #   Default: generalPurpose
+  #   AllowedValues:
+  #     - generalPurpose
+  #     - maxIO
+  # EFSProvisionedThroughputInMibps:
+  #   Description: The provisioned throughput value for the EFS volume.
+  #   Type: Number
+  #   Default: 10
+  #   MaxValue: 1024
+  #   ConstraintDescription: "Value must be between 1-1024"
+  # EFSThroughputMode:
+  #   Description: The throughput mode for the EFS volume.
+  #   Type: String
+  #   Default: bursting
+  #   AllowedValues:
+  #     - provisioned
+  #     - bursting
 Rules:
   SubnetsInVPC:
     Assertions:
@@ -314,7 +314,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-amazon-eks/templates/amazon-eks.template.yaml'
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-amazon-eks/templates/amazon-eks-entrypoint-existing-vpc.template.yaml'
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
@@ -329,16 +329,14 @@ Resources:
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         NumberOfNodes: !Ref NumberOfNodes
-        NodeGroupName: !Ref NodeGroupName
-        NodeVolumeSize: !Ref NodeVolumeSize
-        LambdaZipsBucketName: !Ref LambdaZipsBucketName
         NodeInstanceType: !Ref NodeInstanceType
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         VPCID: !Ref VPCID
-        KubernetesVersion: !Ref KubernetesVersion
-        EfsPerformanceMode: !Ref EFSPerformanceMode
-        EfsThroughputMode: !Ref EFSThroughputMode
-        EfsProvisionedThroughputInMibps: !Ref EFSProvisionedThroughputInMibps
+        PerAccountSharedResources: 'No'
+        PerRegionSharedResources: 'No'
+          #        EfsPerformanceMode: !Ref EFSPerformanceMode
+          #        EfsThroughputMode: !Ref EFSThroughputMode
+          #        EfsProvisionedThroughputInMibps: !Ref EFSProvisionedThroughputInMibps
   BoomiMoleculeStack:
     Type: AWS::CloudFormation::Stack
     Properties:
