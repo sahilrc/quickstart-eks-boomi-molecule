@@ -62,7 +62,7 @@ Resources:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
       # Kubernetes manifest
-      Manifest:
+      Manifest: !Sub |
         apiVersion: v1
         kind: Secret
         metadata:
@@ -93,7 +93,7 @@ Resources:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
       # Kubernetes manifest URL
-      Manifest:
+      Manifest: !Sub |
         apiVersion: v1
         kind: Service
         metadata:
@@ -125,7 +125,7 @@ Resources:
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
-      Manifest:
+      Manifest: |
         apiVersion: v1
         kind: Service
         metadata:
@@ -153,7 +153,7 @@ Resources:
        - !Ref KubeManifestMoleculeALBSerivice
     Properties:
       ClusterName: !Ref ClusterName
-      Manifest:
+      Manifest: !Sub |
         apiVersion: extensions/v1beta1
         kind: Ingress
         metadata:
@@ -189,7 +189,7 @@ Resources:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
       # Kubernetes manifest URL
-      Manifest:
+      Manifest: |
         apiVersion: apps/v1
         kind: StatefulSet
         metadata:
@@ -308,7 +308,7 @@ Resources:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
       # Kubernetes manifest URL
-      Manifest:
+      Manifest: |
         apiVersion: autoscaling/v2beta2
         kind: HorizontalPodAutoscaler
         metadata:
