@@ -23,7 +23,7 @@ The Quick Start sets up the following:
 
 * In the private subnets:
 
-** Amazon EKS Cluster with the Dell Boomi Molecule software installed, one pod in each Availability Zone.
+** Amazon EKS cluster with the Dell Boomi Molecule software installed, one pod in each Availability Zone.
 ** Amazon Elastic File System (Amazon EFS) deployed in the Region. Three Amazon EFS mount points are created also, one in each Availability Zone.
 
 *The template that deploys the Quick Start into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.

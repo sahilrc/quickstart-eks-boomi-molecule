@@ -9,7 +9,7 @@ The Quick Start provides separate templates for these options. It also lets you 
 
 === Authentication
 
-In addition to the two deployment options, there are one authentication options for deployment.
+In addition to the two deployment options, there is one authentication option for deployment.
 
 ** Deploy with authorized Account ID, Username, and Password (Not MFA compatible)
 
