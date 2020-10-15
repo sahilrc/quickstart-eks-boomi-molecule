@@ -9,9 +9,7 @@ The Quick Start provides separate templates for these options. It also lets you 
 
 === Authentication
 
-In addition to the two deployment options, there are two authentication options for deployment.
-
-** Deploy with Account ID, Username, API Key, and Installation Token
+In addition to the two deployment options, there is one authentication option for deployment.
 
 ** Deploy with authorized Account ID, Username, and Password (Not MFA compatible)
 
