@@ -58,6 +58,8 @@ Conditions:
 Resources:
   KubeManifestSecret:
     Type: "AWSQS::Kubernetes::Resource"
+    DependsOn:
+      - WorkloadNamespace
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
@@ -67,6 +69,7 @@ Resources:
         kind: Secret
         metadata:
           name: "boomi-secret"
+          namespace: eks-boomi-molecule
         type: Opaque
         stringData:
           username: ${BoomiUsername}
@@ -86,9 +89,9 @@ Resources:
   KubeManifestMoleculeNLBSerivice:
     Condition: NetworkLoadBalancer
     Type: "AWSQS::Kubernetes::Resource"
-    Metadata:
-      DependsOn:
-       - !Ref EKSMetricsServer
+    DependsOn:
+      - EKSMetricsServer
+      - WorkloadNamespace
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
@@ -98,6 +101,7 @@ Resources:
         kind: Service
         metadata:
           name: molecule-service
+          namespace: eks-boomi-molecule
           annotations:
             service.beta.kubernetes.io/aws-load-balancer-type: nlb
             service.beta.kubernetes.io/aws-load-balancer-ssl-cert: ${CertificateArn}
@@ -119,9 +123,9 @@ Resources:
   KubeManifestMoleculeALBSerivice:
     Condition: ApplicationLoadBalancer
     Type: AWSQS::Kubernetes::Resource
-    Metadata:
-      DependsOn:
-       - !Ref EKSMetricsServer
+    DependsOn:
+      - EKSMetricsServer
+      - WorkloadNamespace
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
@@ -130,6 +134,7 @@ Resources:
         kind: Service
         metadata:
           name: molecule-service
+          namespace: eks-boomi-molecule
           labels:
             app: molecule
         spec:
@@ -148,9 +153,9 @@ Resources:
   KubeManifestMoleculeIngress:
     Condition: ApplicationLoadBalancer
     Type: AWSQS::Kubernetes::Resource
-    Metadata:
-      DependsOn:
-       - !Ref KubeManifestMoleculeALBSerivice
+    DependsOn:
+      - KubeManifestMoleculeALBSerivice
+      - WorkloadNamespace
     Properties:
       ClusterName: !Ref ClusterName
       Manifest: !Sub |
@@ -158,6 +163,7 @@ Resources:
         kind: Ingress
         metadata:
           name: molecule-ingress
+          namespace: eks-boomi-molecule
           annotations:
             # trigger the alb-ingress-controller
             kubernetes.io/ingress.class: alb
@@ -182,9 +188,9 @@ Resources:
                       servicePort: 443
   KubeManifestMoleculeStatefulSet:
     Type: AWSQS::Kubernetes::Resource
-    Metadata:
-      DependsOn:
-       - !Ref EKSMetricsServer
+    DependsOn:
+      - EKSMetricsServer
+      - WorkloadNamespace 
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
@@ -194,6 +200,7 @@ Resources:
         kind: StatefulSet
         metadata:
           name: molecule
+          namespace: eks-boomi-molecule
           labels:
             app: molecule
         spec:
@@ -299,11 +306,11 @@ Resources:
                   value: "Boomi-EKS"
                 - name: INSTALLATION_DIRECTORY
                   value: "/mnt/boomi"
-  KubeManifestHPA:
+  WorkloadAutoScaling:
     Type: AWSQS::Kubernetes::Resource
-    Metadata:
-      DependsOn:
-       - !Ref KubeManifestMoleculeStatefulSet
+    DependsOn:
+      - KubeManifestMoleculeStatefulSet
+      - WorkloadNamespace
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
@@ -313,6 +320,7 @@ Resources:
         kind: HorizontalPodAutoscaler
         metadata:
           name: molecule-hpa
+          namespace: eks-boomi-molecule
           labels:
             app: molecule
         spec:
@@ -333,4 +341,20 @@ Resources:
               name: cpu
               target:
                 type: Utilization
-                averageUtilization: 60
+                averageUtilization: 60  KubeManifestHPA:
+  WorkloadNamespace:
+    Type: AWSQS::Kubernetes::Resource
+    Metadata:
+      DependsOn:
+        - !Ref EKSMetricsServer
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Manifest: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: eks-boomi-molecule
+          labels:
+            name: eks-boomi-molecule
