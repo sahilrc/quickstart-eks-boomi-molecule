@@ -4,8 +4,6 @@ AWS Cloud.
 
 // Replace this example diagram with your own. Send us your source PowerPoint file. Be sure to follow our guidelines here : http://(we should include these points on our contributors guide)
 
-Deploying this Quick Start for a new virtual private cloud (VPC) with default parameters builds the following Dell Boomi environment in the AWS Cloud.
-
 [#architecture1]
 .Quick Start architecture for _{partner-product-name}_ on AWS
 [link=images/image2.png]
@@ -23,7 +21,7 @@ The Quick Start sets up the following:
 
 * In the private subnets:
 
-** Amazon EKS cluster with the Dell Boomi Molecule software installed, one pod in each Availability Zone.
+** Amazon EKS cluster with the {partner-company-name} software installed, one pod in each Availability Zone.
 ** Amazon Elastic File System (Amazon EFS) deployed in the Region. Three Amazon EFS mount points are created also, one in each Availability Zone.
 
 *The template that deploys the Quick Start into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.
