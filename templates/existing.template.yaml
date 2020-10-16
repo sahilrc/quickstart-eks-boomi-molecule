@@ -32,22 +32,34 @@ Metadata:
     - Label:
         default: Amazon EC2 configuration
       Parameters:
-      - KeyPairName
+        - KeyPairName
     - Label:
         default: EKS configuration
       Parameters:
-      - NodeInstanceType
-      - NumberOfNodes
-      # - NodeGroupName
-      # - NodeVolumeSize
-      # - KubernetesVersion
+        - WorkloadNamespace
+        - NodeInstanceType
+        - NumberOfNodes
+        - LoadBalancerType
+    - Label:
+        default: "Boomi Molecule configuration"
+      Parameters:
+        - BoomiAccountID
+        - BoomiUsername
+        - BoomiPassword
+    - Label:
+        default: "DNS or SSL configuration"
+      Parameters:
+        - MoleculeFQDN
+        - HostedZoneID
+        - SSLCertificateArn
     - Label:
         default: AWS Quick Start configuration
       Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-      - QSS3BucketRegion
-      # - LambdaZipsBucketName
+        - QSS3BucketName
+        - QSS3BucketRegion
+        - QSS3KeyPrefix
+        - PerAccountSharedResources
+        - PerRegionSharedResources
     ParameterLabels:
       QSS3BucketName:
         default: Quick Start S3 bucket name
@@ -61,12 +73,6 @@ Metadata:
         default: Nodes instance type
       NumberOfNodes:
         default: Number of nodes
-      # NodeGroupName:
-      #   default: Node group name
-      # NodeVolumeSize:
-      #   default: Node volume size
-      # LambdaZipsBucketName:
-      #   default: Lambda zips bucket name
       PublicSubnet1ID:
         default: Public subnet 1 ID
       PublicSubnet2ID:
@@ -81,27 +87,47 @@ Metadata:
         default: Private subnet 3 ID
       VPCID:
         default: VPC ID
-      # KubernetesVersion:
-      #   default: Kubernetes version
+      KeyPairName:
+        default: Key pair name
+      BoomiAccountID:
+        default: Boomi account ID
+      BoomiUsername:
+        default: Boomi user name
+      BoomiPassword:
+        default: Boomi password
+      SSLCertificateArn:
+        default: SSL certificate ARN
+      HostedZoneID:
+        default: Route 53 hosted zone ID
+      MoleculeFQDN:
+        default: Molecule FQDN
+      WorkloadNamespace:
+        default: Workload namespace
+      PerAccountSharedResources:
+        default: Per account shared resources
+      PerRegionSharedResources:
+        default: Per region shared resources
+      LoadBalancerType:
+        default: Load balancer type
 Parameters:
   PublicSubnet1ID:
     Type: "AWS::EC2::Subnet::Id"
-    Description: The ID of the public subnet in Availability Zone 1 in your existing VPC (e.g., subnet-a0246dcd)
+    Description: The ID of the public subnet in Availability Zone 1 in your existing VPC (e.g., subnet-a0246dcd).
   PublicSubnet2ID:
     Type: "AWS::EC2::Subnet::Id"
-    Description: The ID of the public subnet in Availability Zone 2 in your existing VPC (e.g., subnet-b1236eea)
+    Description: The ID of the public subnet in Availability Zone 2 in your existing VPC (e.g., subnet-b1236eea).
   PublicSubnet3ID:
     Type: "AWS::EC2::Subnet::Id"
-    Description: The ID of the public subnet in Availability Zone 3 in your existing VPC (e.g., subnet-c3456aba)
+    Description: The ID of the public subnet in Availability Zone 3 in your existing VPC (e.g., subnet-c3456aba).
   PrivateSubnet1ID:
     Type: "AWS::EC2::Subnet::Id"
-    Description: The ID of the private subnet in Availability Zone 1 in your existing VPC (e.g., subnet-fe9a8b32)
+    Description: The ID of the private subnet in Availability Zone 1 in your existing VPC (e.g., subnet-fe9a8b32).
   PrivateSubnet2ID:
     Type: "AWS::EC2::Subnet::Id"
-    Description: The ID of the private subnet in Availability Zone 2 in your existing VPC (e.g., subnet-be8b01ea)
+    Description: The ID of the private subnet in Availability Zone 2 in your existing VPC (e.g., subnet-be8b01ea).
   PrivateSubnet3ID:
     Type: "AWS::EC2::Subnet::Id"
-    Description: The ID of the private subnet in Availability Zone 3 in your existing VPC (e.g., subnet-abd39039)
+    Description: The ID of the private subnet in Availability Zone 3 in your existing VPC (e.g., subnet-abd39039).
   KeyPairName:
     Description: Key name for access to EC2 instances.
     Type: AWS::EC2::KeyPair::KeyName
@@ -137,7 +163,7 @@ Parameters:
     Type: String
   VPCID:
     Type: "AWS::EC2::VPC::Id"
-    Description: The ID of your existing VPC (e.g., vpc-0343606e)
+    Description: The ID of your existing VPC (e.g., vpc-0343606e).
   NodeInstanceType:
     Default: t3.xlarge
     AllowedValues:
@@ -196,23 +222,6 @@ Parameters:
     Default: 1
     Description: The number of Amazon EKS node instances. The default is one for each of the three Availability Zones.
     Type: Number
-  # NodeGroupName:
-  #   Default: Default
-  #   Description: The name for Amazon EKS node group.
-  #   Type: String
-  # NodeVolumeSize:
-  #   Default: 100
-  #   Description: The size for the node's root EBS volume.
-  #   Type: String
-  # LambdaZipsBucketName:
-  #   Description: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
-  #   Type: String
-  #   Default: ''
-  # KubernetesVersion:
-  #   Type: String
-  #   AllowedValues: [ "1.16", "1.15" ]
-  #   Default: "1.16"
-  #   Description: The Kubernetes control plane version.
   BoomiUsername:
     Description: The email account associated with the Boomi account.
     Type: String
@@ -245,26 +254,20 @@ Parameters:
     Description: The fully qualified domain name for the Boomi Molecule cluster. Use with 'HostedZoneID' if you are not using SSL..
     Type: String
     Default: ''
-  # EFSPerformanceMode:
-  #   Description: The performance mode for the EFS volume.
-  #   Type: String
-  #   Default: generalPurpose
-  #   AllowedValues:
-  #     - generalPurpose
-  #     - maxIO
-  # EFSProvisionedThroughputInMibps:
-  #   Description: The provisioned throughput value for the EFS volume.
-  #   Type: Number
-  #   Default: 10
-  #   MaxValue: 1024
-  #   ConstraintDescription: "Value must be between 1-1024"
-  # EFSThroughputMode:
-  #   Description: The throughput mode for the EFS volume.
-  #   Type: String
-  #   Default: bursting
-  #   AllowedValues:
-  #     - provisioned
-  #     - bursting
+  WorkloadNamespace:
+    Default: "eks-boomi-molecule"
+    Type: String
+    Description: The Kubernetes namespace to use when provisioning the workload.
+  PerAccountSharedResources:
+    Type: String
+    AllowedValues: ['Yes', 'No']
+    Default: 'Yes'
+    Description: Choose "No" if you have already deployed another EKS Quick Start stack in this AWS account.
+  PerRegionSharedResources:
+    Type: String
+    AllowedValues: ['Yes', 'No']
+    Default: 'Yes'
+    Description: Choose "No" if you have already deployed another EKS Quick Start stack in this Region.
 Rules:
   SubnetsInVPC:
     Assertions:
@@ -289,7 +292,6 @@ Rules:
             - !Not [!Equals [!Ref HostedZoneID, '']]
             - !Not [!Equals [!Ref MoleculeFQDN, '']]
         AssertDescription: "Using an SSL certificate is enforced. A CertificateArn or a HostedZoneID and MoleculeFQDN must be provided."
-
 Conditions:
   GenerateSSL: !And
     - !Equals [!Ref SSLCertificateArn, '']
@@ -332,11 +334,11 @@ Resources:
         NodeInstanceType: !Ref NodeInstanceType
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         VPCID: !Ref VPCID
-        PerAccountSharedResources: 'No'
-        PerRegionSharedResources: 'No'
-          #        EfsPerformanceMode: !Ref EFSPerformanceMode
-          #        EfsThroughputMode: !Ref EFSThroughputMode
-          #        EfsProvisionedThroughputInMibps: !Ref EFSProvisionedThroughputInMibps
+        PerAccountSharedResources: !Ref PerAccountSharedResources
+        PerRegionSharedResources: !Ref PerRegionSharedResources
+        # EfsPerformanceMode: !Ref EFSPerformanceMode
+        # EfsThroughputMode: !Ref EFSThroughputMode
+        # EfsProvisionedThroughputInMibps: !Ref EFSProvisionedThroughputInMibps
   BoomiMoleculeStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -352,9 +354,13 @@ Resources:
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         QSS3BucketRegion: !Ref QSS3BucketRegion
-        CertificateArn: !GetAtt ConfigureSSLStack.Outputs.ACMCertificate
         LoadBalancerType: !Ref LoadBalancerType
+        WorkloadNamespace: !Ref WorkloadNamespace
         ClusterName: !GetAtt EKSStack.Outputs.EKSClusterName
+        CertificateArn: !If
+          - GenerateSSL
+          - !GetAtt ConfigureSSLStack.Outputs.ACMCertificate
+          - !Ref SSLCertificateArn
 Outputs:
   EKSClusterName:
     Value: !GetAtt EKSStack.Outputs.EKSClusterName
