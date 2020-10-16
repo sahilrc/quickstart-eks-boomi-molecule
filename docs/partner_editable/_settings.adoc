@@ -1,4 +1,4 @@
-:quickstart-project-name: quickstart-boomi-eks-molecule
+:quickstart-project-name: quickstart-eks-boomi-molecule
 :partner-product-name: Molecule
 :partner-company-name: Dell Boomi
 :doc-month: October
