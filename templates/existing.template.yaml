@@ -146,7 +146,7 @@ Parameters:
     AllowedPattern: ^[0-9a-zA-Z-/.]*$
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
       uppercase letters, hyphens (-), dots(.) and forward slash (/).
-    Default: quickstart-boomi-eks-molecule/
+    Default: quickstart-eks-boomi-molecule/
     Description: The S3 key prefix for the Quick Start assets. Quick Start key prefix
       can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
       forward slash (/).
@@ -344,16 +344,13 @@ Resources:
     Properties:
       TemplateURL:
         !Sub
-        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/boomi-eks-molecule-manifests.template.yaml'
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/manifests.template.yaml'
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         BoomiUsername: !Ref BoomiUsername
         BoomiPassword: !Ref BoomiPassword
         BoomiAccountID: !Ref BoomiAccountID
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        QSS3BucketRegion: !Ref QSS3BucketRegion
         LoadBalancerType: !Ref LoadBalancerType
         WorkloadNamespace: !Ref WorkloadNamespace
         ClusterName: !GetAtt EKSStack.Outputs.EKSClusterName
