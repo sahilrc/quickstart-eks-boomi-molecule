@@ -1,0 +1,23 @@
+// Replace the <n> in each row to specify the number of resources used in this deployment. Remove the rows for resources that aren’t used.
+|===
+|Resource |This deployment uses
+
+// Space needed to maintain table headers
+|VPCs |1
+|Availability Zone |3
+|Public Subnet |3
+|Private Subnet |3
+|Internet Gateway |1
+|NAT Gateway |3
+|Elastic IP addresses |4
+|Auto Scaling groups |4
+|EKS Cluster |1
+|EKS Managed Node Group |3
+|Application/Network Load Balancers |1
+|t2.micro instances |1
+|t3.medium instances |3
+|EFS file systems |1
+|EFS mount targets |3
+|AWS Key Management Service (KMS) encryption keys |1
+|Secure Sockets Layer (SSL) certificates |1
+|===

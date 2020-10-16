@@ -1,0 +1,341 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Deploy a Boomi Molecule workload into an existing kubernetes cluster (qs-1r813c2of).
+Parameters:
+  ClusterName:
+    Type: String
+    Description: Name of the EKS cluster to join
+  BoomiUsername:
+    Description: The email account associated with the Boomi account.
+    Type: String
+    NoEcho: true
+  BoomiPassword:
+    Description: The password associated with the Boomi account.
+    Type: String
+    NoEcho: true
+  BoomiAccountID:
+    Description: The Boomi account ID that you want to associate with the new Molecule cluster.
+    Type: String
+    NoEcho: true
+  CertificateArn:
+    Description: The SSL Certificate ID used with the load balancer.
+    Type: String
+    Default: ''
+  LoadBalancerType:
+    Type: String
+    Default: ALB
+    AllowedValues:
+      - ALB
+      - NLB
+    Description: EKS Service Load Balancer Type.
+  WorkloadNamespace:
+    Default: "eks-boomi-molecule"
+    Type: String
+    Description: The Kubernetes namespace to use when provisioning the workload.
+Conditions:
+  NetworkLoadBalancer: !Equals [ !Ref LoadBalancerType, NLB]
+  ApplicationLoadBalancer: !Equals [ !Ref LoadBalancerType, ALB]
+Resources:
+  KubeManifestSecret:
+    Type: "AWSQS::Kubernetes::Resource"
+    DependsOn:
+      - EKSClusterNamespace
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      # Kubernetes manifest
+      Manifest: !Sub |
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: "boomi-secret"
+        type: Opaque
+        stringData:
+          username: ${BoomiUsername}
+          password: ${BoomiPassword}
+          account: ${BoomiAccountID}
+  EKSMetricsServer:
+    Type: 'AWSQS::Kubernetes::Helm'
+    Properties:
+      ClusterID: !Ref ClusterName
+      Namespace: kube-system
+      Chart: stable/metrics-server
+      Values:
+        image.repository: k8s.gcr.io/metrics-server/metrics-server
+        image.tag: v0.3.7
+        serviceAccount.name: metrics-server
+        serviceAccount.create: true
+  KubeManifestMoleculeNLBSerivice:
+    Condition: NetworkLoadBalancer
+    Type: "AWSQS::Kubernetes::Resource"
+    DependsOn:
+      - EKSMetricsServer
+      - EKSClusterNamespace
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      # Kubernetes manifest URL
+      Manifest: !Sub |
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: molecule-service
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-type: nlb
+            service.beta.kubernetes.io/aws-load-balancer-ssl-cert: ${CertificateArn}
+          labels:
+            app: molecule
+        spec:
+          selector:
+            app: molecule
+          type: LoadBalancer
+          ports:
+          - name: https
+            protocol: TCP
+            port: 443
+            targetPort: 9090
+          - name: http
+            protocol: TCP
+            port: 80
+            targetPort: 9090
+  KubeManifestMoleculeALBSerivice:
+    Condition: ApplicationLoadBalancer
+    Type: AWSQS::Kubernetes::Resource
+    DependsOn:
+      - EKSMetricsServer
+      - EKSClusterNamespace
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      Manifest: |
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: molecule-service
+          labels:
+            app: molecule
+        spec:
+          type: NodePort
+          selector:
+            app: molecule
+          ports:
+          - name: https
+            protocol: TCP
+            port: 443
+            targetPort: 9090
+          - name: http
+            protocol: TCP
+            port: 80
+            targetPort: 9090
+  KubeManifestMoleculeIngress:
+    Condition: ApplicationLoadBalancer
+    Type: AWSQS::Kubernetes::Resource
+    DependsOn:
+      - KubeManifestMoleculeALBSerivice
+      - EKSClusterNamespace
+    Properties:
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      Manifest: !Sub |
+        apiVersion: extensions/v1beta1
+        kind: Ingress
+        metadata:
+          name: molecule-ingress
+          annotations:
+            # trigger the alb-ingress-controller
+            kubernetes.io/ingress.class: alb
+            # set ALB parameters
+            alb.ingress.kubernetes.io/target-type: instance
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/certificate-arn: ${CertificateArn}
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+            alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+            alb.ingress.kubernetes.io/load-balancer-attributes: routing.http2.enabled=true
+            # allow 404s on the health check
+            alb.ingress.kubernetes.io/healthcheck-path: "/_admin/status"
+            alb.ingress.kubernetes.io/success-codes: "200,404"
+        spec:
+          # forward all requests to nginx-ingress-controller
+          rules:
+            - http:
+                paths:
+                  - path: /*
+                    backend:
+                      serviceName: molecule-service
+                      servicePort: 443
+  KubeManifestMoleculeStatefulSet:
+    Type: AWSQS::Kubernetes::Resource
+    DependsOn:
+      - EKSMetricsServer
+      - EKSClusterNamespace
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      # Kubernetes manifest URL
+      Manifest: |
+        apiVersion: apps/v1
+        kind: StatefulSet
+        metadata:
+          name: molecule
+          labels:
+            app: molecule
+        spec:
+          selector:
+            matchLabels:
+              app: molecule
+          serviceName: "molecule-service"
+          replicas: 3
+          template:
+            metadata:
+              labels:
+                app: molecule
+            spec:
+              terminationGracePeriodSeconds: 60
+              volumes:
+                - name: molecule-storage
+                  persistentVolumeClaim:
+                    claimName: efs-claim
+                - name: tmpfs
+                  emptyDir: {}
+                - name: cgroup
+                  hostPath:
+                    path: /sys/fs/cgroup
+                    type: Directory
+              containers:
+              - image: boomi/molecule:release
+                imagePullPolicy: Always
+                name: atom-node
+                ports:
+                - name: http
+                  containerPort: 9090
+                  protocol: TCP
+                - name: https
+                  containerPort: 9093
+                  protocol: TCP
+                lifecycle:
+                  preStop:
+                    exec:
+                      command:
+                        - sh
+                        - /home/boomi/scaledown.sh
+                resources:
+                  limits:
+                    cpu: "1000m"
+                    memory: "1536Mi"
+                  requests:
+                    cpu: "500m"
+                    memory: "1024Mi"
+                volumeMounts:
+                  - mountPath: "/mnt/boomi"
+                    name: molecule-storage
+                  - name: tmpfs
+                    mountPath: "/run"
+                  - name: tmpfs
+                    mountPath: "/tmp"
+                  - name: cgroup
+                    mountPath: /sys/fs/cgroup
+                startupProbe:
+                  failureThreshold: 60
+                  exec:
+                    command:
+                      - sh
+                      - /home/boomi/probe.sh
+                      - startup
+                readinessProbe:
+                  periodSeconds: 10
+                  initialDelaySeconds: 10
+                  exec:
+                    command:
+                      - sh
+                      - /home/boomi/probe.sh
+                      - readiness
+                livenessProbe:
+                  periodSeconds: 60
+                  exec:
+                    command:
+                      - sh
+                      - /home/boomi/probe.sh
+                      - liveness
+                env:
+                - name: BOOMI_ATOMNAME
+                  value: "Boomi-EKS"
+                - name: ATOM_LOCALHOSTID
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: BOOMI_ACCOUNTID
+                  valueFrom:
+                    secretKeyRef:
+                      name: boomi-secret
+                      key: account
+                - name: BOOMI_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: boomi-secret
+                      key: username
+                - name: BOOMI_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: boomi-secret
+                      key: password
+                - name: BOOMI_CONTAINERNAME
+                  value: "Boomi-EKS"
+                - name: INSTALLATION_DIRECTORY
+                  value: "/mnt/boomi"
+                - name: CONTAINER_PROPERTIES_OVERRIDES
+                  value: "com.boomi.deployment.quickstart=True"
+  KubeManifestHPA:
+    Type: AWSQS::Kubernetes::Resource
+    DependsOn:
+      - KubeManifestMoleculeStatefulSet
+      - EKSClusterNamespace
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      # Kubernetes manifest URL
+      Manifest: |
+        apiVersion: autoscaling/v2beta2
+        kind: HorizontalPodAutoscaler
+        metadata:
+          name: molecule-hpa
+          labels:
+            app: molecule
+        spec:
+          scaleTargetRef:
+            apiVersion: apps/v1beta1
+            kind: StatefulSet
+            name: molecule
+          minReplicas: 3
+          maxReplicas: 200
+        ## Kubernetes v1.18 dependent.
+        #  behavior:
+        #    scaleDown:
+        #      stabilizationWindowSeconds: 60
+        ##
+          metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 60
+  EKSClusterNamespace:
+    Type: AWSQS::Kubernetes::Resource
+    Metadata:
+      DependsOn:
+        - !Ref EKSMetricsServer
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest URL
+      Manifest: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: eks-boomi-molecule
+          labels:
+            name: eks-boomi-molecule
