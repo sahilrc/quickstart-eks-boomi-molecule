@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "deploy an example workload into an existing kubernetes cluster"
+Description: Deploy a Boomi Molecule workload into an existing kubernetes cluster (qs-1r813c2of).
 Parameters:
   ClusterName:
     Type: String
