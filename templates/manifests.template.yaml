@@ -285,6 +285,8 @@ Resources:
                   value: "Boomi-EKS"
                 - name: INSTALLATION_DIRECTORY
                   value: "/mnt/boomi"
+                - name: CONTAINER_PROPERTIES_OVERRIDES
+                  value: "com.boomi.deployment.quickstart=True"
   KubeManifestHPA:
     Type: AWSQS::Kubernetes::Resource
     DependsOn:

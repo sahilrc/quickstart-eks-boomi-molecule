@@ -15,34 +15,18 @@ project:
   lambda_source_path: functions/source
   lambda_zip_path: functions/packages
 tests:
-  existing-vpc:
+  new-vpc:
     regions:
       - us-east-2
     parameters:
-      VPCID: $[taskcat_ssm_/taskcat/params/vpc/id]
-      PrivateSubnet1ID: $[taskcat_ssm_/taskcat/params/vpc/private_subnet/1a/id]
-      PrivateSubnet2ID: $[taskcat_ssm_/taskcat/params/vpc/private_subnet/2a/id]
-      PrivateSubnet3ID: $[taskcat_ssm_/taskcat/params/vpc/private_subnet/3a/id]
-      PublicSubnet1ID: $[taskcat_ssm_/taskcat/params/vpc/public_subnet/1/id]
-      PublicSubnet2ID: $[taskcat_ssm_/taskcat/params/vpc/public_subnet/2/id]
-      PublicSubnet3ID: $[taskcat_ssm_/taskcat/params/vpc/public_subnet/3/id]
-      BoomiAccountID: override
-      BoomiPassword: override
-      BoomiUsername: override
-      MoleculeFQDN: override
-      HostedZoneID: override
+      AvailabilityZones: $[taskcat_genaz_3]
+      KeyPairName: cikey
+      BoomiAccountID: $[taskcat_ssm_/qs/eks-boomi-molecule/params/boomi_account_id]
+      BoomiPassword: $[taskcat_ssm_/qs/eks-boomi-molecule/params/boomi_pass]
+      BoomiUsername: $[taskcat_ssm_/qs/eks-boomi-molecule/params/boomi_user]
+      MoleculeFQDN: $[taskcat_ssm_/qs/eks-boomi-molecule/params/fqdn]
+      HostedZoneID: $[taskcat_ssm_/qs/eks-boomi-molecule/params/hosted_zone]
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
-    template: templates/existing.template.yaml
-  # helm-charts:
-  #   regions:
-  #     - us-east-2
-  #   parameters:
-  #     BoomiAccountID: override
-  #     BoomiPassword: override
-  #     BoomiUsername: override
-  #     QSS3BucketName: $[taskcat_autobucket]
-  #     QSS3BucketRegion: $[taskcat_current_region]
-  #     ClusterName: $[taskcat_ssm_/taskcat/params/eks/cluster_name]
-  #     LoadBalancerType: $[taskcat_ssm_/taskcat/params/boomi-eks-molecule/lb-type]
-  #   template: templates/boomi-eks-molecule.template.yaml
+      RemoteAccessCIDR: 127.0.0.1/32
+    template: templates/new-main.template.yaml
