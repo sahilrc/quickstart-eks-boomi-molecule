@@ -364,5 +364,5 @@ Resources:
           resources:
             requests:
               storage: 1Gi
-          storageClassname: aws-efs
+          storageClassName: aws-efs
           volumeMode: Filesystem
