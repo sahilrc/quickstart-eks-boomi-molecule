@@ -339,3 +339,26 @@ Resources:
           name: eks-boomi-molecule
           labels:
             name: eks-boomi-molecule
+  EFSPVC:
+    Type: AWSQS::Kubernetes::Resource
+    DependsOn:
+      - EKSMetricsServer
+      - EKSClusterNamespace
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      # Kubernetes manifest URL
+      Manifest: |
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: molecule-storage
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resourcees:
+            requests:
+              storage: 1Gi
+          storageClassname: aws-efs
+          volumeMode: Filesystem
