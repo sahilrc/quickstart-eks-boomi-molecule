@@ -31,6 +31,11 @@ Parameters:
     Default: "eks-boomi-molecule"
     Type: String
     Description: The Kubernetes namespace to use when provisioning the workload.
+  MoleculeClusterName:
+    Description: The name for the Boomi Molecule cluster.
+    Type: String
+    AllowedPattern: "[a-zA-Z0-9_-]*"
+    Default: Boomi-Molecule-EKS
 Conditions:
   NetworkLoadBalancer: !Equals [ !Ref LoadBalancerType, NLB]
   ApplicationLoadBalancer: !Equals [ !Ref LoadBalancerType, ALB]
@@ -169,13 +174,13 @@ Resources:
     Type: AWSQS::Kubernetes::Resource
     DependsOn:
       - EKSMetricsServer
-      - EKSClusterNamespace
+      - EFSPVC
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
       Namespace: !Ref WorkloadNamespace
       # Kubernetes manifest URL
-      Manifest: |
+      Manifest: !Sub |
         apiVersion: apps/v1
         kind: StatefulSet
         metadata:
@@ -282,7 +287,7 @@ Resources:
                       name: boomi-secret
                       key: password
                 - name: BOOMI_CONTAINERNAME
-                  value: "Boomi-EKS"
+                  value: ${MoleculeClusterName}
                 - name: INSTALLATION_DIRECTORY
                   value: "/mnt/boomi"
                 - name: CONTAINER_PROPERTIES_OVERRIDES
@@ -325,9 +330,8 @@ Resources:
                 averageUtilization: 60
   EKSClusterNamespace:
     Type: AWSQS::Kubernetes::Resource
-    Metadata:
-      DependsOn:
-        - !Ref EKSMetricsServer
+    DependsOn:
+      - EKSMetricsServer
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
