@@ -361,7 +361,7 @@ Resources:
         spec:
           accessModes:
             - ReadWriteMany
-          resourcees:
+          resources:
             requests:
               storage: 1Gi
           storageClassname: aws-efs
