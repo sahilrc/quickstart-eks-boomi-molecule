@@ -283,6 +283,13 @@ Parameters:
     Default: 10
     MaxValue: 1024
     ConstraintDescription: "Value must be between 1-1024"
+  EFSThroughputMode:
+    Description: The throughput mode for the EFS volume.
+    Type: String
+    Default: bursting
+    AllowedValues:
+      - provisioned
+      - bursting
 Rules:
   SubnetsInVPC:
     Assertions:
@@ -312,6 +319,7 @@ Conditions:
     - !Equals [!Ref SSLCertificateArn, '']
     - !Not [!Equals [!Ref MoleculeFQDN, '']]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  EFSBurstingThroughput: !Equals [!Ref EFSThroughputMode, 'bursting']
 Resources:
   ConfigureSSLStack:
     Condition: GenerateSSL
@@ -332,13 +340,13 @@ Resources:
     Metadata: { cfn-lint: { config: { ignore_checks: [E9902, W9901] } } }
     Properties:
       TemplateURL: !Sub
-        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-advanced-configuration.template.yaml'
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-amazon-eks/templates/amazon-eks-advanced-configuration.template.yaml'
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         ConfigSetName: !Ref AWS::StackName
-        EfsThroughputMode: 'bursting'
-        EfsProvisionedThroughputInMibps: !Ref EFSProvisionedThroughputInMibps
+        EfsThroughputMode: !Ref EFSThroughputMode
+        EfsProvisionedThroughputInMibps: !If [EFSBurstingThroughput, 0, !Ref EFSProvisionedThroughputInMibps]
   EKSStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
