@@ -276,6 +276,7 @@ Parameters:
     Description: The name for the Boomi Molecule cluster.
     Type: String
     AllowedPattern: "[a-zA-Z0-9_]*"
+    AllowedPattern: "[a-zA-Z0-9_-]*"
     Default: Boomi-Molecule-EKS
   EFSProvisionedThroughputInMibps:
     Description: The provisioned throughput value for the EFS volume.
@@ -375,6 +376,7 @@ Resources:
         PerAccountSharedResources: !Ref PerAccountSharedResources
         PerRegionSharedResources: !Ref PerRegionSharedResources
         EfsStorageClass: 'Enabled'
+        ClusterAutoScaler: 'Enabled'
   MoleculeManifestStack:
     Type: AWS::CloudFormation::Stack
     Properties:
