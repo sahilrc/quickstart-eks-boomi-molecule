@@ -1,5 +1,5 @@
 project:
-  name: quickstart-boomi-eks-molecule
+  name: quickstart-eks-boomi-molecule
   owner: quickstart-eng@amazon.com
   regions:
   - eu-north-1
@@ -18,9 +18,18 @@ tests:
   new-vpc:
     regions:
       - us-east-2
+      #      - us-east-1
+      #      - us-east-2
+      #      - us-west-1
+      #      - us-west-2
     parameters:
       AvailabilityZones: $[taskcat_genaz_3]
       KeyPairName: cikey
+      #BoomiAccountID: override
+      #BoomiPassword: override
+      #BoomiUsername: override
+      #MoleculeFQDN: override
+      #HostedZoneID: override
       BoomiAccountID: $[taskcat_ssm_/qs/eks-boomi-molecule/params/boomi_account_id]
       BoomiPassword: $[taskcat_ssm_/qs/eks-boomi-molecule/params/boomi_pass]
       BoomiUsername: $[taskcat_ssm_/qs/eks-boomi-molecule/params/boomi_user]
@@ -29,4 +38,6 @@ tests:
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
       RemoteAccessCIDR: 127.0.0.1/32
+      # PerAccountSharedResources: 'No'
+      # PerRegionSharedResources: 'No'
     template: templates/new-main.template.yaml

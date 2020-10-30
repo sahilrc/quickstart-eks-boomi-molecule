@@ -46,6 +46,8 @@ Metadata:
         - BoomiAccountID
         - BoomiUsername
         - BoomiPassword
+        - MoleculeClusterName
+        - EFSProvisionedThroughputInMibps
     - Label:
         default: "DNS or SSL configuration"
       Parameters:
@@ -101,6 +103,8 @@ Metadata:
         default: Route 53 hosted zone ID
       MoleculeFQDN:
         default: Molecule FQDN
+      MoleculeClusterName:
+        default: Molecule cluster name
       WorkloadNamespace:
         default: Workload namespace
       PerAccountSharedResources:
@@ -137,7 +141,7 @@ Parameters:
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
       letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
       (-).
-    Default: aws-quickstart
+    Default: tcat-b25ec7791e0551d18764aefa6dba60bd-us-east-2
     Description: S3 bucket name for the Quick Start assets. This string can include
       numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
       or end with a hyphen (-).
@@ -152,7 +156,7 @@ Parameters:
       forward slash (/).
     Type: String
   QSS3BucketRegion:
-    Default: 'us-east-1'
+    Default: 'us-east-2'
     Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.
     Type: String
   RemoteAccessCIDR:
@@ -268,6 +272,24 @@ Parameters:
     AllowedValues: ['Yes', 'No']
     Default: 'Yes'
     Description: Choose "No" if you have already deployed another EKS Quick Start stack in this Region.
+  MoleculeClusterName:
+    Description: The name for the Boomi Molecule cluster.
+    Type: String
+    AllowedPattern: "[a-zA-Z0-9_-]*"
+    Default: Boomi-Molecule-EKS
+  EFSProvisionedThroughputInMibps:
+    Description: The provisioned throughput value for the EFS volume.
+    Type: Number
+    Default: 10
+    MaxValue: 1024
+    ConstraintDescription: "Value must be between 1-1024"
+  EFSThroughputMode:
+    Description: The throughput mode for the EFS volume.
+    Type: String
+    Default: bursting
+    AllowedValues:
+      - provisioned
+      - bursting
 Rules:
   SubnetsInVPC:
     Assertions:
@@ -297,6 +319,7 @@ Conditions:
     - !Equals [!Ref SSLCertificateArn, '']
     - !Not [!Equals [!Ref MoleculeFQDN, '']]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  EFSBurstingThroughput: !Equals [!Ref EFSThroughputMode, 'bursting']
 Resources:
   ConfigureSSLStack:
     Condition: GenerateSSL
@@ -312,14 +335,29 @@ Resources:
         QSS3KeyPrefix: !Sub "${QSS3KeyPrefix}submodules/quickstart-aws-acm-certificate/"
         DomainName: !Ref MoleculeFQDN
         HostedZoneID: !Ref HostedZoneID
+  AdvancedConfigStack:
+    Type: AWS::CloudFormation::Stack
+    Metadata: { cfn-lint: { config: { ignore_checks: [E9902, W9901] } } }
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-amazon-eks/templates/amazon-eks-advanced-configuration.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        ConfigSetName: !Ref AWS::StackName
+        EfsThroughputMode: !Ref EFSThroughputMode
+        EfsProvisionedThroughputInMibps: !If [EFSBurstingThroughput, 0, !Ref EFSProvisionedThroughputInMibps]
   EKSStack:
     Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - AdvancedConfigStack
     Properties:
       TemplateURL: !Sub
         - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-amazon-eks/templates/amazon-eks-entrypoint-existing-vpc.template.yaml'
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        ConfigSetName: !Ref AWS::StackName
         PublicSubnet1ID: !Ref PublicSubnet1ID
         PublicSubnet2ID: !Ref PublicSubnet2ID
         PublicSubnet3ID: !Ref PublicSubnet3ID
@@ -336,10 +374,9 @@ Resources:
         VPCID: !Ref VPCID
         PerAccountSharedResources: !Ref PerAccountSharedResources
         PerRegionSharedResources: !Ref PerRegionSharedResources
-        # EfsPerformanceMode: !Ref EFSPerformanceMode
-        # EfsThroughputMode: !Ref EFSThroughputMode
-        # EfsProvisionedThroughputInMibps: !Ref EFSProvisionedThroughputInMibps
-  BoomiMoleculeStack:
+        EfsStorageClass: 'Enabled'
+        ClusterAutoScaler: 'Enabled'
+  MoleculeManifestStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
@@ -353,6 +390,7 @@ Resources:
         BoomiAccountID: !Ref BoomiAccountID
         LoadBalancerType: !Ref LoadBalancerType
         WorkloadNamespace: !Ref WorkloadNamespace
+        MoleculeClusterName: !Ref MoleculeClusterName
         ClusterName: !GetAtt EKSStack.Outputs.EKSClusterName
         CertificateArn: !If
           - GenerateSSL
