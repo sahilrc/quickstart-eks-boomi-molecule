@@ -7,13 +7,13 @@ AWS Cloud.
 [#architecture1]
 .Quick Start architecture for _{partner-product-name}_ on AWS
 [link=images/image2.png]
-image::../images/image2.png[image,width=648,height=430]
+image::../images/boomi-kubernetes-molecule-architecture-diagram.png[image,width=648,height=430]
 
 The Quick Start sets up the following:
 
-* A highly available architecture that spans two Availability Zones.*
+* A highly available architecture that spans three Availability Zones.*
 * A VPC configured with public and private subnets according to AWS best practices, to provide you with your own virtual network on AWS.*
-* An Application/Network Load Balancer.
+* A Network Load Balancer.
 * In the public subnets:
 
 ** Managed NAT gateways to allow outbound internet access for resources in the private subnets.*
