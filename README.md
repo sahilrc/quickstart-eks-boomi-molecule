@@ -1,4 +1,4 @@
-## Boomi Molecule on EKS on the AWS Cloud—Quick Start
+## Boomi Kubernetes Molecule on the AWS Cloud—Quick Start
 
 For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://aws-quickstart.github.io/quickstart-eks-boomi-molecule/).
 
