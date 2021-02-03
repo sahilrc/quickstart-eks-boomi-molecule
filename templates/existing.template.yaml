@@ -264,14 +264,14 @@ Parameters:
     Description: The Kubernetes namespace to use when provisioning the workload.
   PerAccountSharedResources:
     Type: String
-    AllowedValues: ['Yes', 'No']
-    Default: 'Yes'
-    Description: Choose "No" if you have already deployed another EKS Quick Start stack in this AWS account.
+    AllowedValues: ['AutoDetect', 'Yes', 'No']
+    Default: 'AutoDetect'
+    Description: Choose "No" if you already deployed another EKS Quick Start stack in your AWS account.
   PerRegionSharedResources:
     Type: String
-    AllowedValues: ['Yes', 'No']
-    Default: 'Yes'
-    Description: Choose "No" if you have already deployed another EKS Quick Start stack in this Region.
+    AllowedValues: ['AutoDetect', 'Yes', 'No']
+    Default: 'AutoDetect'
+    Description: Choose "No" if you already deployed another EKS Quick Start stack in your Region.
   MoleculeClusterName:
     Description: The name for the Boomi Molecule cluster.
     Type: String
