@@ -94,7 +94,6 @@ Resources:
           name: "boomi-secret"
         type: Opaque
         stringData:
-          username: ${BoomiUsername}
           account: ${BoomiAccountID}
           token: ${BoomiMFAInstallToken}
   EKSMetricsServer:
