@@ -54,8 +54,8 @@ Conditions:
   InstallPasswordProvided: !And
     - !Equals [!Ref BoomiMFAInstallToken, '']
     - !Equals [!Ref BoomiMFAAPIToken, '']
-  NetworkLoadBalancer: !Equals [ !Ref LoadBalancerType, NLB]
-  ApplicationLoadBalancer: !Equals [ !Ref LoadBalancerType, ALB]
+  NetworkLoadBalancer: !Equals [!Ref LoadBalancerType, NLB]
+  ApplicationLoadBalancer: !Equals [!Ref LoadBalancerType, ALB]
 Resources:
   KubeManifestSecretPassword:
     Type: "AWSQS::Kubernetes::Resource"

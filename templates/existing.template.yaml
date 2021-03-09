@@ -349,6 +349,9 @@ Conditions:
   GenerateSSL: !And
     - !Equals [!Ref SSLCertificateArn, '']
     - !Not [!Equals [!Ref MoleculeFQDN, '']]
+  InstallTokenProvided: !And
+    - !Not [!Equals [!Ref BoomiMFAInstallToken, '']]
+    - !Not [!Equals [!Ref BoomiMFAAPIToken, '']]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   EFSBurstingThroughput: !Equals [!Ref EFSThroughputMode, 'bursting']
 Resources:
