@@ -448,11 +448,48 @@ Resources:
                   value: "/mnt/boomi"
                 - name: CONTAINER_PROPERTIES_OVERRIDES
                   value: "com.boomi.deployment.quickstart=True"
+  KubeManifestHPAPassword:
+    Type: AWSQS::Kubernetes::Resource
+    Condition: InstallPasswordProvided
+    DependsOn:
+      - KubeManifestMoleculeStatefulSetPassword
+      - EKSClusterNamespace
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: !Ref WorkloadNamespace
+      # Kubernetes manifest URL
+      Manifest: |
+        apiVersion: autoscaling/v2beta2
+        kind: HorizontalPodAutoscaler
+        metadata:
+          name: molecule-hpa
+          labels:
+            app: molecule
+        spec:
+          scaleTargetRef:
+            apiVersion: apps/v1beta1
+            kind: StatefulSet
+            name: molecule
+          minReplicas: 3
+          maxReplicas: 200
+        ## Kubernetes v1.18 dependent.
+        #  behavior:
+        #    scaleDown:
+        #      stabilizationWindowSeconds: 60
+        ##
+          metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 60
   KubeManifestHPA:
     Type: AWSQS::Kubernetes::Resource
+    Condition: InstallTokenProvided
     DependsOn:
-      - EFSPVC
-      - KubeManifestMoleculeIngress
+      - KubeManifestMoleculeStatefulSet
       - EKSClusterNamespace
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
