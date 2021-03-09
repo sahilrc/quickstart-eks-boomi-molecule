@@ -57,7 +57,7 @@ Conditions:
   NetworkLoadBalancer: !Equals [ !Ref LoadBalancerType, NLB]
   ApplicationLoadBalancer: !Equals [ !Ref LoadBalancerType, ALB]
 Resources:
-  KubeManifestSecret:
+  KubeManifestSecretPassword:
     Type: "AWSQS::Kubernetes::Resource"
     Condition: InstallPasswordProvided
     DependsOn:
