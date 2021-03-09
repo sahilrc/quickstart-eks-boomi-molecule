@@ -207,7 +207,7 @@ Resources:
                     backend:
                       serviceName: molecule-service
                       servicePort: 443
-  KubeManifestMoleculeStatefulSet:
+  KubeManifestMoleculeStatefulSetPassword:
     Type: AWSQS::Kubernetes::Resource
     Condition: InstallPasswordProvided
     DependsOn:
@@ -451,7 +451,8 @@ Resources:
   KubeManifestHPA:
     Type: AWSQS::Kubernetes::Resource
     DependsOn:
-      - KubeManifestMoleculeStatefulSet
+      - EFSPVC
+      - KubeManifestMoleculeIngress
       - EKSClusterNamespace
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
