@@ -529,6 +529,7 @@ Resources:
     Properties:
       # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
       ClusterName: !Ref ClusterName
+      Namespace: default
       # Kubernetes manifest URL
       Manifest: |
         apiVersion: v1
