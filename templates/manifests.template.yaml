@@ -104,7 +104,7 @@ Resources:
       Chart: stable/metrics-server
       Values:
         image.repository: k8s.gcr.io/metrics-server/metrics-server
-        image.tag: v0.3.7
+        image.tag: v0.4.1
         serviceAccount.name: metrics-server
         serviceAccount.create: true
   KubeManifestMoleculeNLBSerivice:
