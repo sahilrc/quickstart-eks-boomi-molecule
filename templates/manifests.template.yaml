@@ -266,11 +266,11 @@ Resources:
                         - /home/boomi/scaledown.sh
                 resources:
                   limits:
-                    cpu: "1000m"
-                    memory: "1536Mi"
+                    cpu: "2000m"
+                    memory: "4000Mi"
                   requests:
-                    cpu: "500m"
-                    memory: "1024Mi"
+                    cpu: "2000m"
+                    memory: "4000Mi"
                 volumeMounts:
                   - mountPath: "/mnt/boomi"
                     name: molecule-storage
@@ -281,7 +281,8 @@ Resources:
                   - name: cgroup
                     mountPath: /sys/fs/cgroup
                 startupProbe:
-                  failureThreshold: 60
+                  failureThreshold: 90
+                  timeoutSeconds: 90
                   exec:
                     command:
                       - sh
@@ -290,6 +291,7 @@ Resources:
                 readinessProbe:
                   periodSeconds: 10
                   initialDelaySeconds: 10
+                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
@@ -297,6 +299,7 @@ Resources:
                       - readiness
                 livenessProbe:
                   periodSeconds: 60
+                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
@@ -389,11 +392,11 @@ Resources:
                         - /home/boomi/scaledown.sh
                 resources:
                   limits:
-                    cpu: "1000m"
-                    memory: "1536Mi"
+                    cpu: "2000m"
+                    memory: "4000Mi"
                   requests:
-                    cpu: "500m"
-                    memory: "1024Mi"
+                    cpu: "2000m"
+                    memory: "4000Mi"
                 volumeMounts:
                   - mountPath: "/mnt/boomi"
                     name: molecule-storage
@@ -404,7 +407,8 @@ Resources:
                   - name: cgroup
                     mountPath: /sys/fs/cgroup
                 startupProbe:
-                  failureThreshold: 60
+                  failureThreshold: 90
+                  timeoutSeconds: 90
                   exec:
                     command:
                       - sh
@@ -413,6 +417,7 @@ Resources:
                 readinessProbe:
                   periodSeconds: 10
                   initialDelaySeconds: 10
+                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
@@ -420,6 +425,7 @@ Resources:
                       - readiness
                 livenessProbe:
                   periodSeconds: 60
+                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
