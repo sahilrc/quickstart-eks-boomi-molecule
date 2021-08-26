@@ -189,7 +189,7 @@ Resources:
             # trigger the alb-ingress-controller
             kubernetes.io/ingress.class: alb
             # set ALB parameters
-            alb.ingress.kubernetes.io/target-type: instance
+            alb.ingress.kubernetes.io/target-type: ip
             alb.ingress.kubernetes.io/scheme: internet-facing
             alb.ingress.kubernetes.io/certificate-arn: ${CertificateArn}
             alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
