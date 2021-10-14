@@ -357,7 +357,6 @@ Resources:
       Parameters:
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        QSS3BucketRegion: !Ref QSS3BucketRegion
         BoomiUsername: !Ref BoomiUsername
         BoomiPassword: !Ref BoomiPassword
         BoomiMFAAPIToken: !Ref BoomiMFAAPIToken
