@@ -292,6 +292,7 @@ Parameters:
   EKSClusterName:
     Type: String
     Description: "(Optional) Name for the EKS cluster. If left blank, one is auto-generated. This must be unique within the Region."
+    Default: ''
   EFSProvisionedThroughputInMibps:
     Description: The provisioned throughput value for the EFS volume.
     Type: Number
