@@ -104,7 +104,7 @@ Resources:
       Chart: stable/metrics-server
       Values:
         image.repository: k8s.gcr.io/metrics-server/metrics-server
-        image.tag: v0.4.1
+        image.tag: v0.3.7
         serviceAccount.name: metrics-server
         serviceAccount.create: true
   KubeManifestMoleculeNLBSerivice:
@@ -189,7 +189,7 @@ Resources:
             # trigger the alb-ingress-controller
             kubernetes.io/ingress.class: alb
             # set ALB parameters
-            alb.ingress.kubernetes.io/target-type: ip
+            alb.ingress.kubernetes.io/target-type: instance
             alb.ingress.kubernetes.io/scheme: internet-facing
             alb.ingress.kubernetes.io/certificate-arn: ${CertificateArn}
             alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
@@ -266,11 +266,11 @@ Resources:
                         - /home/boomi/scaledown.sh
                 resources:
                   limits:
-                    cpu: "2000m"
-                    memory: "4000Mi"
+                    cpu: "1000m"
+                    memory: "1536Mi"
                   requests:
-                    cpu: "2000m"
-                    memory: "4000Mi"
+                    cpu: "500m"
+                    memory: "1024Mi"
                 volumeMounts:
                   - mountPath: "/mnt/boomi"
                     name: molecule-storage
@@ -281,8 +281,7 @@ Resources:
                   - name: cgroup
                     mountPath: /sys/fs/cgroup
                 startupProbe:
-                  failureThreshold: 90
-                  timeoutSeconds: 90
+                  failureThreshold: 60
                   exec:
                     command:
                       - sh
@@ -291,7 +290,6 @@ Resources:
                 readinessProbe:
                   periodSeconds: 10
                   initialDelaySeconds: 10
-                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
@@ -299,7 +297,6 @@ Resources:
                       - readiness
                 livenessProbe:
                   periodSeconds: 60
-                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
@@ -392,11 +389,11 @@ Resources:
                         - /home/boomi/scaledown.sh
                 resources:
                   limits:
-                    cpu: "2000m"
-                    memory: "4000Mi"
+                    cpu: "1000m"
+                    memory: "1536Mi"
                   requests:
-                    cpu: "2000m"
-                    memory: "4000Mi"
+                    cpu: "500m"
+                    memory: "1024Mi"
                 volumeMounts:
                   - mountPath: "/mnt/boomi"
                     name: molecule-storage
@@ -407,8 +404,7 @@ Resources:
                   - name: cgroup
                     mountPath: /sys/fs/cgroup
                 startupProbe:
-                  failureThreshold: 90
-                  timeoutSeconds: 90
+                  failureThreshold: 60
                   exec:
                     command:
                       - sh
@@ -417,7 +413,6 @@ Resources:
                 readinessProbe:
                   periodSeconds: 10
                   initialDelaySeconds: 10
-                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
@@ -425,7 +420,6 @@ Resources:
                       - readiness
                 livenessProbe:
                   periodSeconds: 60
-                  timeoutSeconds: 60
                   exec:
                     command:
                       - sh
