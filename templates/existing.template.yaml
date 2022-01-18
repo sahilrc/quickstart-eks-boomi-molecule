@@ -48,7 +48,6 @@ Metadata:
         - BoomiPassword
         - BoomiMFAAPIToken
         - MoleculeClusterName
-        - EKSClusterName
         - EFSProvisionedThroughputInMibps
     - Label:
         default: "DNS or SSL configuration"
@@ -109,8 +108,6 @@ Metadata:
         default: Molecule FQDN
       MoleculeClusterName:
         default: Molecule cluster name
-      EKSClusterName:
-        default: EKS cluster name
       WorkloadNamespace:
         default: Workload namespace
       PerAccountSharedResources:
@@ -289,10 +286,6 @@ Parameters:
     Type: String
     AllowedPattern: "[a-zA-Z0-9_-]*"
     Default: Boomi-Molecule-EKS
-  EKSClusterName:
-    Type: String
-    Description: "(Optional) Name for the EKS cluster. If left blank, one is auto-generated. This must be unique within the Region."
-    Default: ''
   EFSProvisionedThroughputInMibps:
     Description: The provisioned throughput value for the EFS volume.
     Type: Number
@@ -358,6 +351,7 @@ Resources:
       Parameters:
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        QSS3BucketRegion: !Ref QSS3BucketRegion
         BoomiUsername: !Ref BoomiUsername
         BoomiPassword: !Ref BoomiPassword
         BoomiMFAAPIToken: !Ref BoomiMFAAPIToken
@@ -410,7 +404,6 @@ Resources:
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         NumberOfNodes: !Ref NumberOfNodes
-        EKSClusterName: !Ref EKSClusterName
         NodeInstanceType: !Ref NodeInstanceType
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         VPCID: !Ref VPCID
