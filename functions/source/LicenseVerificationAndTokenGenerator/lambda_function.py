@@ -47,9 +47,9 @@ def _verify_boomi_licensing(username, password, account):
         logger.info(
             f"Licenses are available - Purchased: {molecule_licenses_purchased} / Used: {molecule_licenses_used}")
     else:
-        logger.error('Exception: No enterprise license available')
+        logger.error('Exception: No molecule license available')
         raise Exception(
-            f"No enterprise licenses for account {account} are available. Purchased: {molecule_licenses_purchased}, Used: {molecule_licenses_used}")
+            f"No molecule licenses for account {account} are available. Purchased: {molecule_licenses_purchased}, Used: {molecule_licenses_used}")
 
 
 def _verify_required_parameters(parameters):
