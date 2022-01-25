@@ -258,10 +258,95 @@
           "UpdateType": "Mutable"
         },
         "Values": {
-          "PrimitiveItemType": "String",
           "Type": "Map",
           "Required": false,
           "Documentation": "https://github.com/aws-quickstart/quickstart-helm-resource-provider",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWSQS::Kubernetes::Get": {
+      "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+      "Attributes": {
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "Response": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "ClusterName": {
+          "Required": true,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Namespace": {
+          "Required": true,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "Required": true,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "JsonPath": {
+          "Required": true,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Retries": {
+          "Required": false,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWSQS::Kubernetes::Resource": {
+      "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+      "Attributes": {
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "Uid": {
+          "PrimitiveType": "String"
+        },
+        "SelfLink": {
+          "PrimitiveType": "String"
+        },
+        "ResourceVersion": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "ClusterName": {
+          "Required": true,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Namespace": {
+          "Required": true,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Url": {
+          "Required": false,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Manifest": {
+          "Required": false,
+          "Documentation": "https://github.com/aws-quickstart/quickstart-kubernetes-resource-provider",
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         }
       }
