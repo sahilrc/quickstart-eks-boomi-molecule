@@ -241,22 +241,16 @@ Resources:
                 - name: molecule-storage
                   persistentVolumeClaim:
                     claimName: molecule-storage
-                - name: tmpfs
-                  emptyDir: {}
-                - name: cgroup
-                  hostPath:
-                    path: /sys/fs/cgroup
-                    type: Directory
+              securityContext:
+                fsGroup: 1000 
               containers:
-              - image: boomi/molecule:release
+              - image: boomi/molecule:4.2.0
                 imagePullPolicy: Always
                 name: atom-node
                 ports:
-                - name: http
-                  containerPort: 9090
+                - containerPort: 9090
                   protocol: TCP
-                - name: https
-                  containerPort: 9093
+                - containerPort: 9093
                   protocol: TCP
                 lifecycle:
                   preStop:
@@ -272,42 +266,22 @@ Resources:
                     cpu: "2000m"
                     memory: "4000Mi"
                 volumeMounts:
-                  - mountPath: "/mnt/boomi"
-                    name: molecule-storage
-                  - name: tmpfs
-                    mountPath: "/run"
-                  - name: tmpfs
-                    mountPath: "/tmp"
-                  - name: cgroup
-                    mountPath: /sys/fs/cgroup
-                startupProbe:
-                  failureThreshold: 90
-                  timeoutSeconds: 90
-                  exec:
-                    command:
-                      - sh
-                      - /home/boomi/probe.sh
-                      - startup
+                  - name: molecule-storage 
+                    mountPath: "/mnt/boomi"    
                 readinessProbe:
                   periodSeconds: 10
                   initialDelaySeconds: 10
-                  timeoutSeconds: 60
-                  exec:
-                    command:
-                      - sh
-                      - /home/boomi/probe.sh
-                      - readiness
+                  httpGet:
+                    path: /_admin/readiness
+                    port: 9090
                 livenessProbe:
                   periodSeconds: 60
-                  timeoutSeconds: 60
-                  exec:
-                    command:
-                      - sh
-                      - /home/boomi/probe.sh
-                      - liveness
+                  httpGet:
+                    path: /_admin/liveness
+                    port: 9090
                 env:
                 - name: BOOMI_ATOMNAME
-                  value: "Boomi-EKS"
+                  value: ${MoleculeClusterName}
                 - name: ATOM_LOCALHOSTID
                   valueFrom:
                     fieldRef:
@@ -327,12 +301,8 @@ Resources:
                     secretKeyRef:
                       name: boomi-secret
                       key: password
-                - name: BOOMI_CONTAINERNAME
-                  value: ${MoleculeClusterName}
-                - name: INSTALLATION_DIRECTORY
-                  value: "/mnt/boomi"
                 - name: CONTAINER_PROPERTIES_OVERRIDES
-                  value: "com.boomi.deployment.quickstart=True"
+                  value: "com.boomi.container.debug=true"
   KubeManifestMoleculeStatefulSet:
     Type: AWSQS::Kubernetes::Resource
     Condition: InstallTokenProvided
@@ -367,22 +337,16 @@ Resources:
                 - name: molecule-storage
                   persistentVolumeClaim:
                     claimName: molecule-storage
-                - name: tmpfs
-                  emptyDir: {}
-                - name: cgroup
-                  hostPath:
-                    path: /sys/fs/cgroup
-                    type: Directory
+              securityContext:
+                fsGroup: 1000
               containers:
-              - image: boomi/molecule:release
+              - image: boomi/molecule:4.2.0
                 imagePullPolicy: Always
                 name: atom-node
                 ports:
-                - name: http
-                  containerPort: 9090
+                - containerPort: 9090
                   protocol: TCP
-                - name: https
-                  containerPort: 9093
+                - containerPort: 9093
                   protocol: TCP
                 lifecycle:
                   preStop:
@@ -398,42 +362,22 @@ Resources:
                     cpu: "2000m"
                     memory: "4000Mi"
                 volumeMounts:
-                  - mountPath: "/mnt/boomi"
-                    name: molecule-storage
-                  - name: tmpfs
-                    mountPath: "/run"
-                  - name: tmpfs
-                    mountPath: "/tmp"
-                  - name: cgroup
-                    mountPath: /sys/fs/cgroup
-                startupProbe:
-                  failureThreshold: 90
-                  timeoutSeconds: 90
-                  exec:
-                    command:
-                      - sh
-                      - /home/boomi/probe.sh
-                      - startup
+                  - name: molecule-storage
+                    mountPath: "/mnt/boomi"                  
                 readinessProbe:
                   periodSeconds: 10
                   initialDelaySeconds: 10
-                  timeoutSeconds: 60
-                  exec:
-                    command:
-                      - sh
-                      - /home/boomi/probe.sh
-                      - readiness
+                  httpGet:
+                    path: /_admin/readiness
+                    port: 9090
                 livenessProbe:
                   periodSeconds: 60
-                  timeoutSeconds: 60
-                  exec:
-                    command:
-                      - sh
-                      - /home/boomi/probe.sh
-                      - liveness
+                  httpGet:
+                    path: /_admin/liveness
+                    port: 9090
                 env:
                 - name: BOOMI_ATOMNAME
-                  value: "Boomi-EKS"
+                  value: ${MoleculeClusterName}
                 - name: ATOM_LOCALHOSTID
                   valueFrom:
                     fieldRef:
@@ -448,12 +392,8 @@ Resources:
                     secretKeyRef:
                       name: boomi-secret
                       key: token
-                - name: BOOMI_CONTAINERNAME
-                  value: ${MoleculeClusterName}
-                - name: INSTALLATION_DIRECTORY
-                  value: "/mnt/boomi"
                 - name: CONTAINER_PROPERTIES_OVERRIDES
-                  value: "com.boomi.deployment.quickstart=True"
+                  value: "com.boomi.container.debug=true"
   KubeManifestHPAPassword:
     Type: AWSQS::Kubernetes::Resource
     Condition: InstallPasswordProvided
