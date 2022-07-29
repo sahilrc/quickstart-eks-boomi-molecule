@@ -36,7 +36,6 @@ Metadata:
     - Label:
         default: EKS configuration
       Parameters:
-        - WorkloadNamespace
         - NodeInstanceType
         - NumberOfNodes
         - LoadBalancerType
@@ -50,12 +49,6 @@ Metadata:
         - MoleculeClusterName
         - EKSClusterName
         - EFSProvisionedThroughputInMibps
-    - Label:
-        default: "DNS or SSL configuration"
-      Parameters:
-        - MoleculeFQDN
-        - HostedZoneID
-        - SSLCertificateArn
     - Label:
         default: AWS Quick Start configuration
       Parameters:
@@ -101,18 +94,10 @@ Metadata:
         default: Boomi password
       BoomiMFAAPIToken:
         default: Boomi MFA API token
-      SSLCertificateArn:
-        default: SSL certificate ARN
-      HostedZoneID:
-        default: Route 53 hosted zone ID
-      MoleculeFQDN:
-        default: Molecule FQDN
       MoleculeClusterName:
         default: Molecule cluster name
       EKSClusterName:
         default: EKS cluster name
-      WorkloadNamespace:
-        default: Workload namespace
       PerAccountSharedResources:
         default: Per account shared resources
       PerRegionSharedResources:
@@ -257,23 +242,6 @@ Parameters:
       - ALB
       - NLB
     Description: EKS Service Load Balancer Type.
-  SSLCertificateArn:
-    Description: The ARN of the SSL certificate to use for the load balancer. Use 'SSLCertificateArn' if you are not using 'MoleculeFQDN' and 'HostedZoneID'.
-    Type: String
-    Default: ''
-  HostedZoneID:
-    Description: Route 53 Hosted Zone ID of the domain name. Used in conjunction with a 'MoleculeFQDN'.
-    Type: String
-    MaxLength: 32
-    Default: ''
-  MoleculeFQDN:
-    Description: The fully qualified domain name for the Boomi Molecule cluster. Use with 'HostedZoneID' if you are not using SSL..
-    Type: String
-    Default: ''
-  WorkloadNamespace:
-    Default: "eks-boomi-molecule"
-    Type: String
-    Description: The Kubernetes namespace to use when provisioning the workload.
   PerAccountSharedResources:
     Type: String
     AllowedValues: ['AutoDetect', 'Yes', 'No']
@@ -316,20 +284,6 @@ Rules:
                 - VpcId
             - 'Fn::RefAll': 'AWS::EC2::VPC::Id'
         AssertDescription: All subnets must exist in the VPC
-  DomainNamePresentWithHostedID:
-    Assertions:
-      - Assert: !Or
-          - !Equals [!Ref HostedZoneID, '']
-          - !Not [!Equals [!Ref MoleculeFQDN, '']]
-        AssertDescription: "Please specify a 'Domain Name' if you specify 'Route 53 Hosted Zone ID'"
-  GenerateOrProvideSSL:
-    Assertions:
-      - Assert: !Or
-          - !Not [!Equals [!Ref SSLCertificateArn, '']]
-          - !And
-            - !Not [!Equals [!Ref HostedZoneID, '']]
-            - !Not [!Equals [!Ref MoleculeFQDN, '']]
-        AssertDescription: "Using an SSL certificate is enforced. A CertificateArn or a HostedZoneID and MoleculeFQDN must be provided."
   PasswordOrMFAToken:
     Assertions:
       - Assert: !Or
@@ -341,9 +295,6 @@ Rules:
             - !Equals [!Ref BoomiMFAAPIToken, '']
         AssertDescription: You must supply either a password *or* an MFA installation and API token.
 Conditions:
-  GenerateSSL: !And
-    - !Equals [!Ref SSLCertificateArn, '']
-    - !Not [!Equals [!Ref MoleculeFQDN, '']]
   APITokenProvided: !Not [!Equals [!Ref BoomiMFAAPIToken, ""]]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   EFSBurstingThroughput: !Equals [!Ref EFSThroughputMode, 'bursting']
@@ -362,20 +313,6 @@ Resources:
         BoomiPassword: !Ref BoomiPassword
         BoomiMFAAPIToken: !Ref BoomiMFAAPIToken
         BoomiAccountID: !Ref BoomiAccountID
-  ConfigureSSLStack:
-    Condition: GenerateSSL
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub
-        - "https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-acm-certificate/templates/quickstart-aws-acm-certificate.template.yml"
-        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-      Parameters:
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3BucketRegion: !Ref QSS3BucketRegion
-        QSS3KeyPrefix: !Sub "${QSS3KeyPrefix}submodules/quickstart-aws-acm-certificate/"
-        DomainName: !Ref MoleculeFQDN
-        HostedZoneID: !Ref HostedZoneID
   AdvancedConfigStack:
     Type: AWS::CloudFormation::Stack
     Metadata: { cfn-lint: { config: { ignore_checks: [E9902, W9901] } } }
@@ -433,13 +370,8 @@ Resources:
         BoomiMFAInstallToken: !GetAtt LicenseStack.Outputs.BoomiMFAInstallToken
         BoomiMFAAPIToken: !Ref BoomiMFAAPIToken
         LoadBalancerType: !Ref LoadBalancerType
-        WorkloadNamespace: !Ref WorkloadNamespace
         MoleculeClusterName: !Ref MoleculeClusterName
         ClusterName: !GetAtt EKSStack.Outputs.EKSClusterName
-        CertificateArn: !If
-          - GenerateSSL
-          - !GetAtt ConfigureSSLStack.Outputs.ACMCertificate
-          - !Ref SSLCertificateArn
 Outputs:
   EKSClusterName:
     Value: !GetAtt EKSStack.Outputs.EKSClusterName
