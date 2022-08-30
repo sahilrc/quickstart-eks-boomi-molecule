@@ -27,10 +27,6 @@ Parameters:
     Type: String
     NoEcho: true
     Default: ''
-  CertificateArn:
-    Description: The SSL Certificate ID used with the load balancer.
-    Type: String
-    Default: ''
   LoadBalancerType:
     Type: String
     Default: ALB
@@ -125,7 +121,6 @@ Resources:
           name: molecule-service
           annotations:
             service.beta.kubernetes.io/aws-load-balancer-type: nlb
-            service.beta.kubernetes.io/aws-load-balancer-ssl-cert: ${CertificateArn}
           labels:
             app: molecule
         spec:
@@ -191,8 +186,7 @@ Resources:
             # set ALB parameters
             alb.ingress.kubernetes.io/target-type: ip
             alb.ingress.kubernetes.io/scheme: internet-facing
-            alb.ingress.kubernetes.io/certificate-arn: ${CertificateArn}
-            alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
             alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
             alb.ingress.kubernetes.io/load-balancer-attributes: routing.http2.enabled=true
             # allow 404s on the health check
