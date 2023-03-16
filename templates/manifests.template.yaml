@@ -97,12 +97,29 @@ Resources:
     Properties:
       ClusterID: !Ref ClusterName
       Namespace: kube-system
-      Chart: stable/metrics-server
+      Chart: charts/metrics-server
+      Repository: https://charts.bitnami.com/bitnami
       Values:
-        image.repository: k8s.gcr.io/metrics-server/metrics-server
-        image.tag: v0.4.1
+        #image.repository: k8s.gcr.io/metrics-server/metrics-server
+        #image.tag: v0.4.1
         serviceAccount.name: metrics-server
         serviceAccount.create: true
+  EKSClusterNamespace:
+    Type: AWSQS::Kubernetes::Resource
+    DependsOn:
+      - EKSMetricsServer
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ClusterName: !Ref ClusterName
+      Namespace: default
+      # Kubernetes manifest URL
+      Manifest: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: eks-boomi-molecule
+          labels:
+            name: eks-boomi-molecule
   KubeManifestMoleculeNLBSerivice:
     Condition: NetworkLoadBalancer
     Type: "AWSQS::Kubernetes::Resource"
@@ -176,7 +193,7 @@ Resources:
       ClusterName: !Ref ClusterName
       Namespace: !Ref WorkloadNamespace
       Manifest: !Sub |
-        apiVersion: extensions/v1beta1
+        apiVersion: networking.k8s.io/v1
         kind: Ingress
         metadata:
           name: molecule-ingress
@@ -198,9 +215,12 @@ Resources:
             - http:
                 paths:
                   - path: /*
+                    pathType: Prefix
                     backend:
-                      serviceName: molecule-service
-                      servicePort: 443
+                      service: 
+                        name: molecule-service
+                        port:
+                          number: 443
   KubeManifestMoleculeStatefulSetPassword:
     Type: AWSQS::Kubernetes::Resource
     Condition: InstallPasswordProvided
@@ -400,7 +420,7 @@ Resources:
       Namespace: !Ref WorkloadNamespace
       # Kubernetes manifest URL
       Manifest: |
-        apiVersion: autoscaling/v2beta2
+        apiVersion: autoscaling/v2
         kind: HorizontalPodAutoscaler
         metadata:
           name: molecule-hpa
@@ -437,7 +457,7 @@ Resources:
       Namespace: !Ref WorkloadNamespace
       # Kubernetes manifest URL
       Manifest: |
-        apiVersion: autoscaling/v2beta2
+        apiVersion: autoscaling/v2
         kind: HorizontalPodAutoscaler
         metadata:
           name: molecule-hpa
@@ -462,22 +482,6 @@ Resources:
               target:
                 type: Utilization
                 averageUtilization: 60
-  EKSClusterNamespace:
-    Type: AWSQS::Kubernetes::Resource
-    DependsOn:
-      - EKSMetricsServer
-    Properties:
-      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
-      ClusterName: !Ref ClusterName
-      Namespace: default
-      # Kubernetes manifest URL
-      Manifest: |
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: eks-boomi-molecule
-          labels:
-            name: eks-boomi-molecule
   EFSPVC:
     Type: AWSQS::Kubernetes::Resource
     DependsOn:
