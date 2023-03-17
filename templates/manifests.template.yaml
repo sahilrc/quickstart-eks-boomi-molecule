@@ -503,5 +503,5 @@ Resources:
           resources:
             requests:
               storage: 1Gi
-          storageClassName: aws-efs
+          storageClassName: efs-sc
           volumeMode: Filesystem
