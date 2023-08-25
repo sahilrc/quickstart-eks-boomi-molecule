@@ -1,0 +1,40 @@
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  CodeGuruReviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::650612280906:role/Admin
+          role-session-name: Admin
+          aws-region: us-east-1
+
+      - name: Set Account ID
+        run: |
+          echo "AID=$(aws sts get-caller-identity --query 'Account' --output text)" >> $GITHUB_ENV
+      - name: Amazon CodeGuru Reviewer Scanner
+        uses: aws-actions/codeguru-reviewer@v1.1
+        if: ${{ always() }}
+        with:
+          build_path: '.'
+          s3_bucket: codeguru-reviewer-${{ env.AID }}-us-east-1
+
+      - name: Upload review result
+        if: ${{ github.event_name != 'push' }}
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: codeguru-results.sarif.json
+
