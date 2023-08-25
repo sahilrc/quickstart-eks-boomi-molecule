@@ -40,7 +40,7 @@ jobs:
         if: ${{ always() }}
         with:
           build_path: '.'
-          s3_bucket: codeguru-reviewer-${{ env.AID }}-us-east-1
+          s3_bucket: codeguru-reviewer-sahil
 
       - name: Upload review result
         if: ${{ github.event_name != 'push' }}
